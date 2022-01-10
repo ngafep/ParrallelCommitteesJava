@@ -1,0 +1,12 @@
+{
+  "networkConfig": 
+  [
+    {
+      "numberOfCommittees": 3,
+      "numberOfQuotaForAllCommittees": 3,
+      "numberOfInitialTokensForAllCommittees": 1000,
+      "capacityForAllCommittees": 10,
+      "PQLForAllCommittees": 10,
+    },
+  ]
+}
