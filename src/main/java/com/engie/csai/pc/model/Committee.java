@@ -12,13 +12,8 @@ package com.engie.csai.pc.model;
 
 //## auto_generated
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.ListIterator;
-import java.util.Map;
+import java.util.*;
 
-import com.google.common.collect.Lists;
 //----------------------------------------------------------------------------
 // com/engie/csai/pc/model/Committee.java                                                                  
 //----------------------------------------------------------------------------
@@ -91,7 +86,7 @@ public class Committee
      * This method creates a new peer, based on the selected category. For this, a
      * PoW with related difficulty must be solved.
      *
-     * @param selectedCat
+     * @param peerAddress
      */
     // ## operation createNewPeer(int)
     public void createNewPeer(String peerAddress)
@@ -131,7 +126,7 @@ public class Committee
      * This method broadcasts a distributed data transmission in the committee by
      * notifying the members.
      *
-     * @param tx
+     * @param clientRequestMessage
      */
     //	public void notofyPDTtoCommitteeMembers(Map<String, List<String>> __pdt) {
     //		Iterator<Peer> committeeMembers = this.getPeerOfCommittee();
@@ -151,7 +146,8 @@ public class Committee
     public void notofyPDTtoCommitteeMembers(ClientRequestMessage clientRequestMessage)
     {
         Iterator<Peer> committeeMembers = this.getPeerOfCommittee();
-        ArrayList<Peer> committeeMembersList = Lists.newArrayList(committeeMembers);
+        List<Peer> committeeMembersList = new ArrayList<>();
+        committeeMembers.forEachRemaining(committeeMembersList::add);
 
         int s = committeeMembersList.size();
         int i = 0;
@@ -183,7 +179,7 @@ public class Committee
      * This method registers the result of each round of consensus for every
      * distributed data transmission.
      *
-     * @param tx
+     * @param pdt
      */
     // ## operation setConsensusResult(ArrayList<String>)
     public void setConsensusResult(Map<String, String> pdt)

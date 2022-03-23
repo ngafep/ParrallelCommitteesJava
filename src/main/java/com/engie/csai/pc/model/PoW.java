@@ -1,11 +1,7 @@
 package com.engie.csai.pc.model;
 
-import java.math.BigInteger;
-import java.nio.charset.Charset;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,11 +11,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import com.google.common.collect.Table;
-import com.google.common.collect.HashBasedTable;
-
-//import com.google.common.collect.Multiset.Entry;
 
 public class PoW
 {

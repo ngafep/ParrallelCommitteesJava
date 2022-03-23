@@ -6,11 +6,6 @@ import com.engie.csai.pc.model.json.CategoriesConfigJson;
 import com.engie.csai.pc.model.json.ClientRequestJson;
 import com.engie.csai.pc.model.json.ClientRequestsJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;

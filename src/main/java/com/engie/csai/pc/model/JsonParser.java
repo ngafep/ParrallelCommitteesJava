@@ -1,10 +1,5 @@
 package com.engie.csai.pc.model;
 
-import com.google.gson.JsonElement;
-import org.json.JSONException;
-import org.json.simple.parser.ParseException;
-
-import java.io.IOException;
 
 public class JsonParser
 {
