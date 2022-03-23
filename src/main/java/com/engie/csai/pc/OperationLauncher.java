@@ -6,20 +6,24 @@ import com.engie.csai.pc.model.RecvRabbitMQ;
 import com.engie.csai.pc.model.SendRabbitMQ;
 import com.engie.csai.pc.model.json.ClientRequestJson;
 import com.engie.csai.pc.model.json.ClientRequestsJson;
-import com.engie.csai.pc.pbftSimulator.PBFTsimulator;
 
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class OperationLauncher extends Thread
 {
 
     private final String catId;
+    private final int numberOfPeer;
+    private final int nbRequests;
 
-    public OperationLauncher(String catId)
+    public OperationLauncher(String catId, int numberOfPeer, int nbRequests)
     {
         this.catId = catId;
+        this.numberOfPeer = numberOfPeer;
+        this.nbRequests = nbRequests;
     }
 
 
@@ -28,21 +32,37 @@ public class OperationLauncher extends Thread
     {
         try
         {
-            launchOperationForOneCategory(catId);
+            launchOperationForOneCategoryWithoutRabbitMQ();
         } catch (Exception e)
         {
             e.printStackTrace();
         }
     }
 
-    private static void launchOperationForOneCategory(String catId) throws Exception
+    private void launchOperationForOneCategoryWithoutRabbitMQ() throws Exception{
+        RecvRabbitMQ.standbyForReceiveMessages(catId, "Queue" + catId);
+
+        SendRabbitMQ.send(catId, "Queue" + catId);
+
+
+    }
+
+    private void launchOperationForOneCategory() throws Exception
     {
-        JsonReaderInParallel jsonReaderInParallel = new JsonReaderInParallel();
-        ClientRequestsJson jsonFile = jsonReaderInParallel.parseJsonFile(catId);
+        ClientRequestsJson jsonFile = new JsonReaderInParallel().parseJsonFile(catId);
+        if(jsonFile == null){
+            System.out.println("not file found for : " + catId);
+            return;
+        }
 
         ClientRequestMessage[] clientRequestExtractedFromJson = new ClientRequestMessage[jsonFile.getRequests().size()]; // -> Client-Request[*category index*][*Client-Request index in that category*]
         int requestIndex = 0;
         List<ClientRequestJson> requestJsonList = jsonFile.getRequests();
+        Set<String> clientsInJson = requestJsonList.stream().map(req -> req.getSenderSignature()).collect(Collectors.toSet());
+        RecvRabbitMQ.addNumberOfClientsForCategory(catId, clientsInJson.size());
+        RecvRabbitMQ.addNumberOfPeersForCategory(catId, numberOfPeer);
+        RecvRabbitMQ.addNumberOfRequestsForCategory(catId, nbRequests);
+        RecvRabbitMQ.standbyForReceiveMessages(catId, "Queue" + catId);
         for (ClientRequestJson requestJson : requestJsonList)
         {
             assert false;
@@ -50,27 +70,14 @@ public class OperationLauncher extends Thread
                     new ClientRequestMessage(requestJson.getSenderSignature(), requestJson.getReceiverAddress(), requestJson.getFee(),
                             requestJson.getData(), requestJson.getTokenToSend(), false,
                             new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date()));
-            requestIndex++;
             /**
              * Inserting Client-Requests in related queue of RibbitMQ
              */
-            SendRabbitMQ.send(clientRequestExtractedFromJson.toString(), "Queue" + catId);
+           // SendRabbitMQ.send(clientRequestExtractedFromJson[requestIndex].toString(), "Queue" + catId);
+            SendRabbitMQ.send(catId, "Queue" + catId);
+            requestIndex++;
             /**
              * Receiving Client-Requests by committees from related RabbitMQ queue
-             */
-            //receiveRequestLaunchPBFT(catId);
-            /**
-             * Before starting the consensus, it should be considered to put the received Client-Requests in the Peers' Client-Request queue.
-             * Each peer in the committee before starting to process the received Client-Request, checks for knowing if the number of existing Client-Requests
-             * does exceed the authorized number, that is, there are apparently some limitations for the bandwidth etc. So, the peers (is PBFT: nodes/replicas)
-             * everytime before starting a consensus, they must check the network limitation to be sure whether the limitations have not yet exceeded.
-             * If so, they start to process the oldest received Client-Request (from the FiFo queue) ... WE EXTEND THIS SECTION ...
-             * An error in current code is that all the fies are reading in parallel, but waiting for finish all the files and then creating Client-Requests ...
-             * This approach is not correct (because in this case, reading the file in parallel is NOT util)
-             * So, at the same time the files are reading in parallel, the Client-Requests also should be created and sent to the committees,
-             * otherwise, why do we need to read the files in parallel ?!
-             *
-             *
              */
             /**
              * Launching PBFT consensus
@@ -100,15 +107,15 @@ public class OperationLauncher extends Thread
             // then numberOfRequests in PBFT simulator should be deleted.
             //
 
-            receiveRequestLaunchPBFT(catId);
+//            receiveRequestLaunchPBFT(catId);
         }
     }
 
-    private static void receiveRequestLaunchPBFT(String catId) throws Exception
+    /*private static void receiveRequestLaunchPBFT(String catId) throws Exception
     {
         RecvRabbitMQ.recv("Queue" + catId);
 
-        /*PBFTsimulator pbfTsimulator = new PBFTsimulator();
-        pbfTsimulator.launch();*/
-    }
+        *//*PBFTsimulator pbfTsimulator = new PBFTsimulator();
+        pbfTsimulator.launch();*//*
+    }*/
 }

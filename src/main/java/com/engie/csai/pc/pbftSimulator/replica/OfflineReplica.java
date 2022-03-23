@@ -5,11 +5,11 @@ import com.engie.csai.pc.pbftSimulator.message.Message;
 
 public class OfflineReplica extends Replica{
 	
-	public OfflineReplica(int id, int[] netDlys, int[] netDlysToClis) {
-		super(id, netDlys, netDlysToClis);
+	public OfflineReplica(int id, int[] netDlys, int[] netDlysToClis, PBFTsimulator pbfTsimulator) {
+		super(id, netDlys, netDlysToClis, pbfTsimulator);
 	}
 	
-	public void msgProcess(PBFTsimulator pbfTsimulator, Message msg) {
+	public void msgProcess(Message msg) {
 		msg.print("Disconnect");
 		return;
 	}

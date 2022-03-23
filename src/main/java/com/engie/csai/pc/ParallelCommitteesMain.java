@@ -2,26 +2,33 @@ package com.engie.csai.pc;
 
 import com.engie.csai.pc.actors.User;
 import com.engie.csai.pc.model.*;
+import com.engie.csai.pc.model.json.CategoriesConfigJson;
 import com.engie.csai.pc.model.json.ClientRequestJson;
 import com.engie.csai.pc.model.json.ClientRequestsJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 //----------------------------------------------------------------------------
 // ParallelCommitteesMain.java
 //----------------------------------------------------------------------------
 
-//## ignore
 public class ParallelCommitteesMain
 {
 
@@ -57,32 +64,33 @@ public class ParallelCommitteesMain
         int pqlForAllCats;
 
         //Reading configuration JSON file:
-        final JSONObject config = readNetworkConfigFromJsonFile();
+        final CategoriesConfigJson config = readNetworkConfigFromJsonFile();
         //End reading config file.
 
         // Showing network configuration information
         System.err.println("The network has been configured as follows:\n");
-        numberOfCat = config.getInt("numberOfCommittees");
+        numberOfCat = config.getNetworkConfigs().size();
         System.out.println("Number of committees: " + numberOfCat);
-        numberOfQuota = config.getInt("numberOfQuotaForAllCommittees");
-        System.out.println("Number of quota for all committees: " + numberOfQuota);
-        tokensInitForAllCats = config.getFloat("numberOfInitialTokensForAllCommittees");
-        System.out.println("Number of initial tokens for all committees: " + tokensInitForAllCats);
-        comCapacityForAllCats = config.getInt("capacityForAllCommittees");
-        System.out.println("Capacity for all committees: " + comCapacityForAllCats);
-        pqlForAllCats = config.getInt("PQLForAllCommittees");
-        System.out.println("PQL (Peer Queue Limit) for all committees: " + pqlForAllCats + "\n\n");
+//        numberOfQuota = config.getInt("numberOfQuotaForAllCommittees");
+//        System.out.println("Number of quota for all committees: " + numberOfQuota);
+//        tokensInitForAllCats = config.getFloat("numberOfInitialTokensForAllCommittees");
+//        System.out.println("Number of initial tokens for all committees: " + tokensInitForAllCats);
+//        comCapacityForAllCats = config.getInt("capacityForAllCommittees");
+//        System.out.println("Capacity for all committees: " + comCapacityForAllCats);
+//        pqlForAllCats = config.getInt("PQLForAllCommittees");
+//        System.out.println("PQL (Peer Queue Limit) for all committees: " + pqlForAllCats + "\n\n");
 
         // Applying configuration to the network
         String[] catId = new String[numberOfCat];
         int[] comId = new int[numberOfCat];
         int[] quotaInit = new int[numberOfCat];
         float[] tokensInit = new float[numberOfCat];
+        int[] nbRequests = new int[numberOfCat];
         int[] comCapacity = new int[numberOfCat];
         int[] pql = new int[numberOfCat];
         int[] freeSeats = new int[numberOfCat];
-        applyNetworkConfig(numberOfCat, numberOfQuota, tokensInitForAllCats, comCapacityForAllCats, pqlForAllCats,
-                catId, comId, quotaInit, tokensInit, comCapacity, pql, freeSeats);
+        applyNetworkConfig(config,
+                catId, comId, quotaInit, tokensInit, nbRequests, comCapacity, pql, freeSeats);
 
         // Setting consensus algorithms
         String[] consensusId = new String[4];
@@ -96,14 +104,13 @@ public class ParallelCommitteesMain
 
         // creating committees
         Committee[] com = createCommittees(numberOfCat, catId, comId, quotaInit, tokensInit, comCapacity,
-                pql, freeSeats, consensusId[0], network);
+                pql, freeSeats, consensusId[2], network);
 
         /**** **** ****
          **** User ****
          **** **** ****/
         /*
         All following actions should be done by an instance of the User class.
-        This user is a client in PBFT simulator.
          */
         Category[] category = new Category[numberOfCat];
         Committee[] committee = new Committee[numberOfCat];
@@ -122,11 +129,11 @@ public class ParallelCommitteesMain
         float lockedTokensForAllCats = 0;
         lockedTokensForAllCats = 2;
 
-        // Initializing number of peers for each committe
+        // Initializing number of peers for each committee
         for (int committeeIndex : comId)
         {
             System.out.println("Enter number of peers in committee " + committeeIndex + ": " +
-                    "(Maximum possible value is: " + comCapacityForAllCats + ")");
+                    "(Maximum possible value is: " + comCapacity[committeeIndex] + ")");
             numberOfPeers[committeeIndex] = sc.nextInt();
 
             keyPeer = new KeyPairGenerator[numberOfCat][numberOfPeers[committeeIndex]];
@@ -193,6 +200,10 @@ public class ParallelCommitteesMain
 
                 for (int ch = 0; ch < max; ch++)
                 {
+                    /*
+                    Data includes only a sequence of '0'.
+                    Number of Zeros is based on maximum authorized size of data in each category.
+                    */
                     dataCreatorTemp = "0";
                     dataCreator.append(dataCreatorTemp);
                 }
@@ -222,7 +233,7 @@ public class ParallelCommitteesMain
          * ***********************************************************************
          *
          * This section is used when a Client-Request is sent apart from JSON file,
-         * by clicking on the button dedicated for this purpose in the GUI.
+         * by clicking on a button dedicated for this purpose in the GUI.
          *
          * ***********************************************************************
          * ***********************************************************************
@@ -240,28 +251,34 @@ public class ParallelCommitteesMain
          * then parsing JSON files to create Client-Requests of Client-Request Class type
          * and then sending Client-Requests through RabbitMQ (Each queue serves a committee.)
          */
-        OperationLauncher operationLauncherCat0 = new OperationLauncher(catId[0]);
-        operationLauncherCat0.start();
-        //Thread.sleep(3000);
-        OperationLauncher operationLauncherCat1 = new OperationLauncher(catId[1]);
-        operationLauncherCat1.start();
-        //Thread.sleep(3000);
-        OperationLauncher operationLauncherCat2 = new OperationLauncher(catId[2]);
-        operationLauncherCat2.start();
+        if (Objects.equals(Consensus.getConsAlg(), "pbft"))
+        {
+            System.out.println("PBFT starts ...");
 
-        operationLauncherCat0.join();
-        operationLauncherCat1.join();
-        operationLauncherCat2.join();
+            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[0], numberOfPeers[0], nbRequests[0]), 3, 20, TimeUnit.SECONDS);
+//            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[1], numberOfPeers[1], nbRequests[1]), 3, 20, TimeUnit.SECONDS);
+//            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[2], numberOfPeers[2], nbRequests[2]), 3, 20, TimeUnit.SECONDS);
 
-        operationLauncherCat0.interrupt();
-        operationLauncherCat1.interrupt();
-        operationLauncherCat2.interrupt();
+//            OperationLauncher operationLauncherCat0 = new OperationLauncher(catId[0], numberOfPeers[0]);
+//            operationLauncherCat0.start();
+//
+//            OperationLauncher operationLauncherCat1 = new OperationLauncher(catId[1], numberOfPeers[1]);
+//            operationLauncherCat1.start();
+//
+//            OperationLauncher operationLauncherCat2 = new OperationLauncher(catId[2], numberOfPeers[2]);
+//            operationLauncherCat2.start();
+//
+//            operationLauncherCat0.join();
+//            operationLauncherCat1.join();
+//            operationLauncherCat2.join();
+//
+//            operationLauncherCat0.interrupt();
+//            operationLauncherCat1.interrupt();
+//            operationLauncherCat2.interrupt();
+        }
 
-
-
-
-
-        System.exit(0);
+//        System.exit(0);
 
 
         /*
@@ -336,7 +353,7 @@ public class ParallelCommitteesMain
             {
 
                 /*
-                 * Signing data by a random selected peer.
+                 * Signing data by a random selected client peer.
                  */
                 randomPeer = ThreadLocalRandom.current().nextInt(0, numberOfPeers[c]);
                 System.out.println("Selected peer in Committee " + c + " is Peer: " + randomPeer);
@@ -412,15 +429,20 @@ public class ParallelCommitteesMain
             for (int requestIndex = 0; requestIndex < numberOfRequestsInJSON; requestIndex++)
             {
                 clientRequestJsonElements = new ClientRequestJson().data(data[fileIndex][requestIndex]).fee((float) data[fileIndex][requestIndex].length())
-                        .senderSignature("senderSignaature").receiverAddress("receiverAddress").tokenToSend(requestIndex);
+                        .senderSignature("senderSignature_" + new Random().nextInt(100, 110)).receiverAddress("receiverAddress").tokenToSend(requestIndex);
                 json.addRequestsItem(clientRequestJsonElements);
             }
-            mapper.writeValue(Paths.get("JsonFiles/clientRequest_" + cat + ".json").toFile(), json);
+            mapper.writeValue(Paths.get("D:\\Parallel-Committees-Java-Code\\input/clientRequest_" + cat + ".json").toFile(), json);
             fileIndex++;
         }
     }
 
-    private static void createPeer(int numberOfCat, String[] catId, Network network, Committee[] com, Category[] category, Committee[] committee, int[] targetPeerCreation, KeyPairGenerator[][] keyPeer, StringBuffer[][] publicKeyStrBPeer, String[][] publicKeyStrPeer, String[][] addressPeer, StringBuffer[][] privateKeyStrBPeer, String[][] privateKeyStrPeer, PeerSetting[][] peerSetting, Peer[][] peer, boolean waitInQ, KeyPairGenerator[][] keyPairGenSign, KeyPair[][] kPairSign, PrivateKey[][] prvKeySign, PublicKey[][] pubKeySign, int[] numberOfPeers, float[] lockedTokens) throws NoSuchAlgorithmException
+    private static void createPeer(int numberOfCat, String[] catId, Network network, Committee[] com,
+                                   Category[] category, Committee[] committee,
+                                   int[] targetPeerCreation, KeyPairGenerator[][] keyPeer,
+                                   StringBuffer[][] publicKeyStrBPeer, String[][] publicKeyStrPeer,
+                                   String[][] addressPeer, StringBuffer[][] privateKeyStrBPeer,
+                                   String[][] privateKeyStrPeer, PeerSetting[][] peerSetting, Peer[][] peer, boolean waitInQ, KeyPairGenerator[][] keyPairGenSign, KeyPair[][] kPairSign, PrivateKey[][] prvKeySign, PublicKey[][] pubKeySign, int[] numberOfPeers, float[] lockedTokens) throws NoSuchAlgorithmException
     {
         int peerQsize;
         for (int committeeIndex = 0; committeeIndex < numberOfCat; committeeIndex++)
@@ -547,45 +569,28 @@ public class ParallelCommitteesMain
         return com;
     }
 
-    private static void applyNetworkConfig(int numberOfCat, int numberOfQuota, float tokensInitForAllCats, int comCapacityForAllCats, int pqlForAllCats, String[] catId, int[] comId, int[] quotaInit, float[] tokensInit, int[] comCapacity, int[] pql, int[] freeSeats)
+    private static void applyNetworkConfig(CategoriesConfigJson config, String[] catId, int[] comId, int[] quotaInit, float[] tokensInit, int[] nbRequests, int[] comCapacity, int[] pql, int[] freeSeats)
     {
+        int numberOfCat = config.getNetworkConfigs().size();
         for (int c = 0; c < numberOfCat; c++)
         {
             catId[c] = "Cat" + c;
             comId[c] = c;
-            quotaInit[c] = numberOfQuota;
-            tokensInit[c] = tokensInitForAllCats;
-            comCapacity[c] = comCapacityForAllCats;
-            pql[c] = pqlForAllCats;
+            quotaInit[c] = config.getNetworkConfigs().get(c).getNumberOfQuota();
+            tokensInit[c] = config.getNetworkConfigs().get(c).getNumberOfInitialTokens();
+            nbRequests[c] = config.getNetworkConfigs().get(c).getNumberOfRequests();
+            comCapacity[c] = config.getNetworkConfigs().get(c).getCapacity();
+            pql[c] = config.getNetworkConfigs().get(c).getPql();
             freeSeats[c] = comCapacity[c];
         }
     }
 
-    private static JSONObject readNetworkConfigFromJsonFile() throws IOException
+    private static CategoriesConfigJson readNetworkConfigFromJsonFile() throws IOException
     {
-        String contentJSON;
-        BufferedReader br = new BufferedReader(new FileReader("NetworkConfiguration.json"));
-        try
-        {
-            StringBuilder sb = new StringBuilder();
-            String line = br.readLine();
+            ObjectMapper mapper = new ObjectMapper();
+            //PDTsJson pdTsJson = mapper.readValue(Paths.get("PC_UML_IBM/Files/pdts_" + fileIndex + ".json").toFile(), PDTsJson.class);
 
-            while (line != null)
-            {
-                sb.append(line);
-                sb.append(System.lineSeparator());
-                line = br.readLine();
-            }
-            contentJSON = sb.toString();
-        } finally
-        {
-            br.close();
-        }
-
-        final JSONObject obj = new JSONObject(contentJSON);
-        final JSONArray networkConfig = obj.getJSONArray("networkConfig");
-        final JSONObject config = networkConfig.getJSONObject(0);
-        return config;
+            return mapper.readValue(new FileReader("NetworkConfiguration.json"), CategoriesConfigJson.class);
     }
 
 } // end class ParallelCommitteesMain

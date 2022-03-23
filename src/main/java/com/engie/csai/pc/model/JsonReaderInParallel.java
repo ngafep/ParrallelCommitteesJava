@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -24,7 +25,15 @@ public class JsonReaderInParallel
             ObjectMapper mapper = new ObjectMapper();
             //PDTsJson pdTsJson = mapper.readValue(Paths.get("PC_UML_IBM/Files/pdts_" + fileIndex + ".json").toFile(), PDTsJson.class);
 
-            return mapper.readValue(Paths.get("JsonFiles/pdts_" + catId + ".json").toFile(), ClientRequestsJson.class);
+            String fileName= "D:\\Parallel-Committees-Java-Code\\input\\clientRequest_" + catId + ".json";
+            File file = new File(fileName);
+            if(file.exists()){
+            ClientRequestsJson clientRequestsJson = mapper.readValue(Paths.get(fileName).toFile(), ClientRequestsJson.class);
+            file.delete();
+            return clientRequestsJson;
+            }
+            return null;
+
 
 
             //            //int numberOfFiles = 10;

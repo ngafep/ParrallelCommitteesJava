@@ -421,15 +421,15 @@ public class PoW
             @SuppressWarnings("unchecked")
             public int compare(Object o1, Object o2)
             {
-                return ((Comparable<V>) ((Map.Entry<K, V>) (o1)).getValue())
-                        .compareTo(((Map.Entry<K, V>) (o2)).getValue());
+                return ((Comparable<V>) ((Entry<K, V>) (o1)).getValue())
+                        .compareTo(((Entry<K, V>) (o2)).getValue());
             }
         });
 
         Map<K, V> result = new LinkedHashMap<>();
         for (Iterator<Entry<K, V>> it = list.iterator(); it.hasNext(); )
         {
-            Map.Entry<K, V> entry = (Map.Entry<K, V>) it.next();
+            Entry<K, V> entry = (Entry<K, V>) it.next();
             result.put(entry.getKey(), entry.getValue());
         }
 

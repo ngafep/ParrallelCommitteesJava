@@ -13,6 +13,10 @@ public class ClientRequestMessage
     public boolean validityStatus;
     public String requestTimeStamp;
 
+    public ClientRequestMessage()
+    {
+    }
+
     public ClientRequestMessage(String senderSignature, String receiver, float fee, String data, float tokenToSend,
                                 boolean validyStatus, String requestTimeStamp)
     {
