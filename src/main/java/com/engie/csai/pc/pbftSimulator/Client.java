@@ -74,7 +74,7 @@ public class Client {
 		while(reqStats.containsKey(time)) {
 			time++;
 		}
-		int priId = viewNumber % PBFTsimulator.NUMBER_OF_NODES; //priId: Primary Id (Leader Id).
+		int priId = viewNumber % pbfTsimulator.getPeerCount(); //priId: Primary Id (Leader Id).
 		Message requestMsg = new RequestMsg("Message", time, clientId, clientId, priId, time + netDlys[priId]);
 		pbfTsimulator.sendMsg(requestMsg, sendTag);
 		reqStats.put(time, PROCESSING);
@@ -130,7 +130,7 @@ public class Client {
 		}
 		//否则给所有的节点广播request消息
 		// Otherwise, broadcast request to all nodes.
-		for(int i = 0; i < PBFTsimulator.NUMBER_OF_NODES; i++) {
+		for(int i = 0; i < pbfTsimulator.getPeerCount(); i++) {
 			Message requestMsg = new RequestMsg("Message", t, clientId, clientId, i, cliTimeOutMsg.rcvtime + netDlys[i]);
 			pbfTsimulator.sendMsg(requestMsg, sendTag);
 		}
@@ -167,7 +167,7 @@ public class Client {
 				cnt++;
 			}
 		}
-		if(cnt > Utils.getMaxTorelentNumber(PBFTsimulator.NUMBER_OF_NODES)) return true;
+		if(cnt > Utils.getMaxTorelentNumber(pbfTsimulator.getPeerCount())) return true;
 		return false;
 	}
 	

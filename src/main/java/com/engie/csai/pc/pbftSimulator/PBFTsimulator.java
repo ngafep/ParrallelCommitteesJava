@@ -17,11 +17,8 @@ public class PBFTsimulator {
 	 * (Each committee is considered to work as a separate subnetwork...)
 	 */
 
-	public static final int NUMBER_OF_NODES = 5; // RN -> numberOfNodes  						//replicas节点的数量(rn) //Number of nodes
-
 	public static final int NUMBER_OF_FAULTY_NODES = 0; // FN -> numberOfFaultyNodes						//恶意节点的数量 //Number of malicious nodes
 
-	public static final int NUMBER_OF_CLIENTS = 3; // CN -> numberOfClients						//客户端数量 //Number of clients
 	/**
      * As in PBFT, the replicas (nodes) will directly send 'Reply' to the client,
 	 * it can cause a limitation for 'number of clients' regardless of 'total number of requests',
@@ -56,7 +53,6 @@ public class PBFTsimulator {
 	public static final int INFLIGHT = 2000; 					//最多同时处理多少请求
                                                                 //How many requests can be processed simultaneously
 
-	public static final int REQNUM = 5000;					//请求消息总数量 //Total number of request messages
 	/**
 	 * apparently by increasing the number of requests,
 	 * throughput is increased as well.
@@ -124,11 +120,9 @@ public class PBFTsimulator {
 	//初始化节点之间的基础网络时延以及节点与客户端之间的基础网络时延
 	// Initialize the basic network delay between all nodes
 	// And the basic network delay between the nodes and the clients.
-	private int[][] netDlys = netDlyBtwRpInit(NUMBER_OF_NODES);
-
-	private int[][] netDlysToClis = netDlyBtwRpAndCliInit(NUMBER_OF_NODES, NUMBER_OF_CLIENTS);
-
-	private int[][] netDlysToNodes = Utils.flipMatrix(netDlysToClis);
+	private int[][] netDlys;
+	private int peerCount; // RN -> numberOfNodes  						//replicas节点的数量(rn) //Number of nodes
+	private int requestCount;					//请求消息总数量 //Total number of request messages
 
 	public static void main (String[] args){
 		Thread t1 = createPBFTThread();
@@ -143,17 +137,23 @@ public class PBFTsimulator {
 			@Override
 			public void run()
 			{
-				new PBFTsimulator().launch();
+				new PBFTsimulator().launch(3, 5, 5000);
 			}
 		};
 	}
 
-	public void launch() {
+	public void launch(int clientCount, int peerCount, int requestCount) {
+		this.peerCount = peerCount;
+		this.requestCount = requestCount;
+		netDlys = netDlyBtwRpInit(peerCount);
+		int[][] netDlysToClis = netDlyBtwRpAndCliInit(peerCount, clientCount);
+		int[][] netDlysToNodes = Utils.flipMatrix(netDlysToClis);
+
 		//初始化包含FN个拜占庭意节点的RN个replicas // Initialize RN replicas (nodes) containing FN Byzantine nodes.
-		boolean[] byzantines = byztDistriInit(NUMBER_OF_NODES, NUMBER_OF_FAULTY_NODES); // byzts -> byzantines
+		boolean[] byzantines = byztDistriInit(peerCount, NUMBER_OF_FAULTY_NODES); // byzts -> byzantines
 //		boolean[] byzantines = {true, false, false, false, false, false, true};
-		Replica[] replicas = new Replica[NUMBER_OF_NODES]; // reps -> replicas
-		for(int i = 0; i < NUMBER_OF_NODES; i++) {
+		Replica[] replicas = new Replica[peerCount]; // reps -> replicas
+		for(int i = 0; i < peerCount; i++) {
 			if(byzantines[i]) {
 				/**
 				 * Even in case of using ByztReplica rather than Replica, the simulator
@@ -168,8 +168,8 @@ public class PBFTsimulator {
 		}
 
 		//初始化CN个客户端 // Initialize CN clients
-		Client[] clients = new Client[NUMBER_OF_CLIENTS]; // clis -> clients
-		for(int i = 0; i < NUMBER_OF_CLIENTS; i++) {
+		Client[] clients = new Client[clientCount]; // clis -> clients
+		for(int i = 0; i < clientCount; i++) {
 			//客户端的编号设置为负数 // The client's number is set to a negative number (??)
 			clients[i] = new Client(Client.getCliId(i), netDlysToNodes[i], this);
 		}
@@ -177,8 +177,8 @@ public class PBFTsimulator {
 		//初始随机发送INFLIGHT个请求消息 // Initially randomly send INFLIGHT request messages
 		Random rand = new Random(555);
 		int requestNums = 0;
-		for(int i = 0; i < Math.min(INFLIGHT, REQNUM); i++) {
-			clients[rand.nextInt(NUMBER_OF_CLIENTS)].sendRequest(0);
+		for(int i = 0; i < Math.min(INFLIGHT, requestCount); i++) {
+			clients[rand.nextInt(clientCount)].sendRequest(0);
 			requestNums++;
 		}
 
@@ -212,8 +212,8 @@ public class PBFTsimulator {
 			 * the 'x' must be in the range of supported by the receiver committee;
 			 * otherwise, the PDT is rejected by the participating nodes (validators) in the consensus.
 			 */
-			if(requestNums - getStableRequestNum(clients) < INFLIGHT && requestNums < REQNUM) {
-				clients[rand.nextInt(NUMBER_OF_CLIENTS)].sendRequest(msg.rcvtime);
+			if(requestNums - getStableRequestNum(clients) < INFLIGHT && requestNums < requestCount) {
+				clients[rand.nextInt(clientCount)].sendRequest(msg.rcvtime);
 				requestNums++;
 			}
 			inFlyMsgLen -= msg.len;
@@ -237,7 +237,7 @@ public class PBFTsimulator {
 		}
 		long totalTime = 0;
 		long totalStableMsg = 0;
-		for(int i = 0; i < NUMBER_OF_CLIENTS; i++) {
+		for(int i = 0; i < clientCount; i++) {
 			totalTime += clients[i].accTime;
 			totalStableMsg += clients[i].stableMsgNum();
 		}
@@ -313,7 +313,7 @@ public class PBFTsimulator {
 	}
 
 	public void sendMsgToOthers(Message msg, int id, String tag) {
-		for(int i = 0; i < NUMBER_OF_NODES; i++) {
+		for(int i = 0; i < peerCount; i++) {
 			if(i != id) {
 				Message m = msg.copy(i, msg.rcvtime + netDlys[id][i]);
 				sendMsg(m, tag);
@@ -335,5 +335,15 @@ public class PBFTsimulator {
 			num += clients[i].stableMsgNum();
 		}
 		return num;
+	}
+
+	public int getPeerCount()
+	{
+		return peerCount;
+	}
+
+	public int getRequestCount()
+	{
+		return requestCount;
 	}
 }

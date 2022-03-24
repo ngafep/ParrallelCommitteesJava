@@ -252,6 +252,7 @@ public class ParallelCommitteesMain
 
             ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
             scheduler.scheduleAtFixedRate(new OperationLauncher(catId[0], numberOfPeers[0], nbRequests[0]), 3, 20, TimeUnit.SECONDS);
+            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[1], numberOfPeers[1], nbRequests[1]), 3, 20, TimeUnit.SECONDS);
 //            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[1], numberOfPeers[1], nbRequests[1]), 3, 20, TimeUnit.SECONDS);
 //            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[2], numberOfPeers[2], nbRequests[2]), 3, 20, TimeUnit.SECONDS);
 
@@ -424,7 +425,7 @@ public class ParallelCommitteesMain
             for (int requestIndex = 0; requestIndex < numberOfRequestsInJSON; requestIndex++)
             {
                 clientRequestJsonElements = new ClientRequestJson().data(data[fileIndex][requestIndex]).fee((float) data[fileIndex][requestIndex].length())
-                        .senderSignature("senderSignature_" + new Random().nextInt(100, 110)).receiverAddress("receiverAddress").tokenToSend(requestIndex);
+                        .senderSignature("senderSignature_" + new Random().nextInt(100, 107)).receiverAddress("receiverAddress").tokenToSend(requestIndex);
                 json.addRequestsItem(clientRequestJsonElements);
             }
             mapper.writeValue(Paths.get("D:\\Parallel-Committees-Java-Code\\input/clientRequest_" + cat + ".json").toFile(), json);

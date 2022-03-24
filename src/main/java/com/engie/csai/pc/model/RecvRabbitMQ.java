@@ -49,24 +49,27 @@ public class RecvRabbitMQ
                         {
                             e.printStackTrace();
                         }
-                        for(ClientRequestMessage clientRequestMessage : clientRequestMessages )
-                        {
-                            String message = clientRequestMessage.toString();
 
-                            //String message = new String(body, StandardCharsets.UTF_8);
-                            // get file
-                            // parse file and get messages
-                            // loop on consensus for each request
-                            System.out.flush();
-                            System.out.println("A new client request is received as follows: " + message + "'" + "\n" + "\n");
-                        /*
-                        Launching PBFT
-                         */
-                            service.callConsensus(category, numberOfClientsPerCategory.get(category), numberOfPeersPerCategory.get(category), numberOfRequestsPerCategory.get(category), message);
+                        service.callConsensus(category, numberOfClientsPerCategory.get(category), numberOfPeersPerCategory.get(category), numberOfRequestsPerCategory.get(category), clientRequestMessages[0].toString());
 
-                            channel.basicAck(deliveryTag, false);
-                            break;
-                        }
+//                        for(ClientRequestMessage clientRequestMessage : clientRequestMessages )
+//                        {
+//                            String message = clientRequestMessage.toString();
+//
+//                            //String message = new String(body, StandardCharsets.UTF_8);
+//                            // get file
+//                            // parse file and get messages
+//                            // loop on consensus for each request
+//                            System.out.flush();
+//                            System.out.println("A new client request is received as follows: " + message + "'" + "\n" + "\n");
+//                        /*
+//                        Launching PBFT
+//                         */
+//                            service.callConsensus(category, numberOfClientsPerCategory.get(category), numberOfPeersPerCategory.get(category), numberOfRequestsPerCategory.get(category), message);
+//
+//                            channel.basicAck(deliveryTag, false);
+//                            break;
+//                        }
                     }
                 });
     }

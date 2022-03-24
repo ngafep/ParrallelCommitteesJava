@@ -46,7 +46,7 @@ public class Replica {
 	//消息缓存<type, <msg>>:type消息类型; // Message cache <type, <msg>>:type Message type;
 	public Map<Integer, Set<Message>> msgCache;
 
-	private PBFTsimulator pbfTsimulator;
+	private PBFTsimulator pbftSimulator;
 	
 	//最新reply的状态集合<c, <c, t, r>>:c客户端编号;t请求消息时间戳;r返回结果
 	// The state collection of the latest reply <c, <c, t, r>>:
@@ -78,7 +78,7 @@ public class Replica {
 		checkPoints = new HashMap<>();
 		reqStats = new HashMap<>();
 		checkPoints.put(0, lastReplyMap);
-		this.pbfTsimulator = pbfTsimulator;
+		this.pbftSimulator = pbfTsimulator;
 		//初始时启动Timer
 		// Start Timer initially
 		setTimer(lastRepNum + 1, 0);
@@ -143,7 +143,7 @@ public class Replica {
 		if(isInMsgCache(cm) || !prepared(mm)) {
 			return;
 		}
-		pbfTsimulator.sendMsgToOthers(cm, nodeId, sendTag);
+		pbftSimulator.sendMsgToOthers(cm, nodeId, sendTag);
 		addMessageToCache(cm);
 	}
 	
@@ -160,7 +160,7 @@ public class Replica {
 			lastRepNum++;
 			setTimer(lastRepNum+1, time);
 			if(rem != null) {
-				pbfTsimulator.sendMsg(rm, sendTag);
+				pbftSimulator.sendMsg(rm, sendTag);
 				LastReply llp = lastReplyMap.get(rem.clientId);
 				if(llp == null) {
 					llp = new LastReply(rem.clientId, rem.clientReqTimeStamp, "result");
@@ -176,7 +176,7 @@ public class Replica {
 				Message checkptMsg = new CheckPointMsg(viewNumber, mm.seqNumber, lastReplyMap, nodeId, nodeId, nodeId, time);
 //				System.out.println("send:"+checkptMsg.toString());
 				addMessageToCache(checkptMsg);
-				pbfTsimulator.sendMsgToOthers(checkptMsg, nodeId, sendTag);
+				pbftSimulator.sendMsgToOthers(checkptMsg, nodeId, sendTag);
 			}
 		}
 	}
@@ -192,7 +192,7 @@ public class Replica {
 				cnt++;
 			}
 		}
-		if(cnt >= 2 * Utils.getMaxTorelentNumber(PBFTsimulator.NUMBER_OF_NODES)) {
+		if(cnt >= 2 * Utils.getMaxTorelentNumber(pbftSimulator.getPeerCount())) {
 			return true;
 		}
 		return false;
@@ -209,7 +209,7 @@ public class Replica {
 				cnt++;
 			}
 		}
-		if(cnt > 2 * Utils.getMaxTorelentNumber(PBFTsimulator.NUMBER_OF_NODES)) {
+		if(cnt > 2 * Utils.getMaxTorelentNumber(pbftSimulator.getPeerCount())) {
 			return true;
 		}
 		return false;
@@ -225,7 +225,7 @@ public class Replica {
 				cnt++;
 			}
 		}
-		if(cnt > 2 * Utils.getMaxTorelentNumber(PBFTsimulator.NUMBER_OF_NODES)) {
+		if(cnt > 2 * Utils.getMaxTorelentNumber(pbftSimulator.getPeerCount())) {
 			return true;
 		}
 		return false;
@@ -245,7 +245,7 @@ public class Replica {
 			}
 			int cnt = snMap.get(ckt.seqNumber)+1;
 			snMap.put(ckt.seqNumber, cnt);
-			if(cnt > Utils.getMaxTorelentNumber(PBFTsimulator.NUMBER_OF_NODES)) {
+			if(cnt > Utils.getMaxTorelentNumber(pbftSimulator.getPeerCount())) {
 				checkPoints.put(ckt.seqNumber, ckt.lastReply);
 				maxN = Math.max(maxN, ckt.seqNumber);
 			}
@@ -268,7 +268,7 @@ public class Replica {
 		if(reqStats.containsKey(msg) && reqStats.get(msg) == STABLE) {
 			long recTime = msg.rcvtime + netDlyToClis[Client.getCliArrayIndex(clientId)];
 			Message replyMsg = new ReplyMsg(viewNumber, clientReqTimeStamp, clientId, nodeId, "result", nodeId, clientId, recTime);
-			pbfTsimulator.sendMsg(replyMsg, sendTag);
+			pbftSimulator.sendMsg(replyMsg, sendTag);
 			return;
 		}
 		if(!reqStats.containsKey(msg)) {
@@ -287,7 +287,7 @@ public class Replica {
 					PrePrepareMsg ppMsg = (PrePrepareMsg)m;
 					if(ppMsg.viewNumber == viewNumber && ppMsg.nodeId == nodeId && ppMsg.reqMsg.equals(msg)) {
 						m.rcvtime = msg.rcvtime;
-						pbfTsimulator.sendMsgToOthers(m, nodeId, sendTag);
+						pbftSimulator.sendMsgToOthers(m, nodeId, sendTag);
 						return;
 					}
 				}
@@ -300,7 +300,7 @@ public class Replica {
 				seqNumber++;
 				Message prePrepareMsg = new PrePrepareMsg(viewNumber, seqNumber, reqlyMsg, nodeId, nodeId, nodeId, reqlyMsg.rcvtime);
 				addMessageToCache(prePrepareMsg);
-				pbfTsimulator.sendMsgToOthers(prePrepareMsg, nodeId, sendTag);
+				pbftSimulator.sendMsgToOthers(prePrepareMsg, nodeId, sendTag);
 			}
 		}
 	}
@@ -315,7 +315,7 @@ public class Replica {
 		//消息的视图是否合法，序号是否在水位内
 		// Check whether the view of the message matches the view of the node, and whether the sender of the message is the primary node,
 		// Whether the view of the message is legal and whether the sequence number is within the bit level
-		if(msgv < viewNumber || !inWater(msgn) || i != msgv % PBFTsimulator.NUMBER_OF_NODES || !hasNewView(viewNumber)) {
+		if(msgv < viewNumber || !inWater(msgn) || i != msgv % pbftSimulator.getPeerCount() || !hasNewView(viewNumber)) {
 			return;
 		}
 		//把prePrepare消息和其包含的request消息放进缓存
@@ -328,7 +328,7 @@ public class Replica {
 		Message prepareMsg = new PrepareMsg(msgv, msgn, d, nodeId, nodeId, nodeId, msg.rcvtime);
 		if(isInMsgCache(prepareMsg)) return;
 		addMessageToCache(prepareMsg);
-		pbfTsimulator.sendMsgToOthers(prepareMsg, nodeId, sendTag);
+		pbftSimulator.sendMsgToOthers(prepareMsg, nodeId, sendTag);
 	}
 	
 	public void receivePrepare(Message msg) {
@@ -371,7 +371,7 @@ public class Replica {
 		if(timeoutMsg.seqNumber <= lastRepNum || timeoutMsg.viewNumber < viewNumber) return;
 		//如果不再会有新的request请求，则停止timeOut
 		// If there are no new requests, stop timeOut
-		if(reqStats.size() >= PBFTsimulator.REQNUM) return;
+		if(reqStats.size() >= pbftSimulator.getRequestCount()) return;
 		isTimeOut = true;
 		//发送viewChange消息
 		// Send viewChange message
@@ -380,7 +380,7 @@ public class Replica {
 		Map<Integer, Set<Message>> P = computeP();
 		Message vm = new ViewChangeMsg(viewNumber + 1, h, ss, C, P, nodeId, nodeId, nodeId, msg.rcvtime);
 		addMessageToCache(vm);
-		pbfTsimulator.sendMsgToOthers(vm, nodeId, sendTag);
+		pbftSimulator.sendMsgToOthers(vm, nodeId, sendTag);
 	}
 	
 	public void receiveCheckPoint(Message msg) {
@@ -434,7 +434,7 @@ public class Replica {
 				Map<String, Set<Message>> VONMap = computeVON();
 				Message nvMsg = new NewViewMsg(viewNumber, VONMap.get("V"), VONMap.get("O"), VONMap.get("N"), nodeId, nodeId, nodeId, msg.rcvtime);
 				addMessageToCache(nvMsg);
-				pbfTsimulator.sendMsgToOthers(nvMsg, nodeId, sendTag);
+				pbftSimulator.sendMsgToOthers(nvMsg, nodeId, sendTag);
 				//发送所有不在O内的request消息的prePrepare消息
 				Set<Message> reqSet = msgCache.get(Message.REQUEST);
 				if(reqSet == null) reqSet = new HashSet<>();
@@ -477,7 +477,7 @@ public class Replica {
 	}
 	
 	public int getPriId() {
-		return viewNumber % PBFTsimulator.NUMBER_OF_NODES;
+		return viewNumber % pbftSimulator.getPeerCount();
 	}
 	
 	public boolean isPrimary() {
@@ -671,7 +671,7 @@ public class Replica {
 	
 	public void setTimer(int n, long time) {
 		Message timeOutMsg = new TimeOutMsg(viewNumber, n, nodeId, nodeId, time + PBFTsimulator.TIMEOUT);
-		pbfTsimulator.sendMsg(timeOutMsg, sendTag);
+		pbftSimulator.sendMsg(timeOutMsg, sendTag);
 	}
 
 }

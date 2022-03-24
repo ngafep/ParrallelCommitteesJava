@@ -1,25 +1,25 @@
 package com.engie.csai.pc.service;
 
 import com.engie.csai.pc.model.ClientRequestMessage;
-import com.engie.csai.pc.pbftSimulatorold.PBFTsimulator;
+import com.engie.csai.pc.pbftSimulator.Client;
+import com.engie.csai.pc.pbftSimulator.PBFTsimulator;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class CommitteeService {
 
 
-    private static PBFTsimulator INSTANCE_PBFT;
-//    public synchronized PBFTsimulator getInstancePbft(Integer nbClients, Integer nbPeers, Integer nbRequests){
-//        if(INSTANCE_PBFT == null){
-//           // INSTANCE_PBFT = new PBFTsimulator(nbClients, nbPeers, nbRequests);
-//        }
-//        //return new PBFTsimulator(nbClients, nbPeers, nbRequests);
-//        return new PBFTsimulator();
-//    }
+    Map<String, PBFTsimulator> pbftSimulatorPerCategory = new HashMap<>();
 
-    public void callConsensus(String category, Integer nbClients, Integer nbPeers, Integer nbRequests, String clientRequest){
+    private PBFTsimulator getSimulator(String category){
+        pbftSimulatorPerCategory.putIfAbsent(category, new PBFTsimulator());
+        return pbftSimulatorPerCategory.get(category);
+    }
+
+    public void callConsensus(String category, Integer clientCount, Integer peerCount, Integer requestCount, String clientRequest){
         ClientRequestMessage requestMessage = ClientRequestDeserializer.deserialize(clientRequest);
-       // PBFTsimulator pbfTsimulator = getInstancePbft(nbClients, nbPeers, nbRequests);
-        //PBFTsimulator.launch(clientRequest);
-        PBFTsimulator pbfTsimulator = new PBFTsimulator(nbPeers, 0, nbClients, nbRequests);
-        pbfTsimulator.launch();
+        PBFTsimulator simulator = getSimulator(category);
+        simulator.launch(clientCount, peerCount, requestCount);
     }
 }
