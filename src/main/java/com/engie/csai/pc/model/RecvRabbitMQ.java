@@ -21,9 +21,10 @@ public class RecvRabbitMQ
     private static Map<String, Integer> numberOfPeersPerCategory = new ConcurrentHashMap<>();
     private static Map<String, Integer> numberOfRequestsPerCategory = new ConcurrentHashMap<>();
 
-    public static void standbyForReceiveMessages(String category, String queueName) throws IOException, TimeoutException
+    public static void standbyForReceiveMessages(String category, String queueName, Committee committee) throws IOException, TimeoutException
     {
-        CommitteeService service = new CommitteeService();
+        CommitteeService service = CommitteeService.getInstance();
+        service.register(category, committee);
         boolean autoAck = false;
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");

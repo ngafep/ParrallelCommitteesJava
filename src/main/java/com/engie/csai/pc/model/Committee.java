@@ -12,6 +12,11 @@ package com.engie.csai.pc.model;
 
 //## auto_generated
 
+import com.engie.csai.pc.pbftSimulator.subscriber.MessageSubscriber;
+import com.engie.csai.pc.pbftSimulator.PBFTsimulator;
+import lombok.Getter;
+import org.apache.commons.codec.binary.StringUtils;
+
 import java.util.*;
 
 //----------------------------------------------------------------------------
@@ -20,17 +25,19 @@ import java.util.*;
 
 //## package com::engie::csai::pc::model 
 
-//## class Committee 
-public class Committee
+//## class Committee
+
+public class Committee implements MessageSubscriber
 {
 
-    protected static int id;
+    private int timeSpent = 0;
+    private int numberOfMessages = 0;
+
+    private int id;
 
     protected int comCap; // ## attribute ComCap
 
     protected int pql; // ## attribute PQL
-
-    protected int peerQsize;
 
     protected Category CategoryOfCommittee; // ## link CategoryOfCommittee
 
@@ -40,19 +47,23 @@ public class Committee
 
     protected LinkedList<Peer> PeerOfCommittee = new LinkedList<Peer>(); // ## link PeerOfCommittee
 
-    protected static int freeSeats;
+    private int freeSeats;
+
+    @Getter
+    private final List<Peer> peerQ = new ArrayList<>();
+
 
     public Committee(int id, int comCap, int pql, int freeSeats)
     {
-        Committee.id = id;
+        this.id = id;
         this.comCap = comCap;
         this.pql = pql;
-        Committee.freeSeats = freeSeats;
+        this.freeSeats = freeSeats;
     }
 
     public Committee(int id)
     {
-        Committee.id = id;
+        this.id = id;
     }
 
     public Committee()
@@ -62,12 +73,12 @@ public class Committee
 
     public int reduceActualFreeSeats()
     {
-        return Committee.freeSeats = Committee.freeSeats - 1;
+        return this.freeSeats = this.freeSeats - 1;
     }
 
     public int increaseActualFreeSeats()
     {
-        return Committee.freeSeats = Committee.freeSeats + 1;
+        return this.freeSeats = this.freeSeats + 1;
     }
 
     public int getFreeSeats()
@@ -101,12 +112,13 @@ public class Committee
      *
      * @param peer
      */
-    public int insertPeerToQueue(Peer peer)
+    public void insertPeerToQueue(Peer peer)
     {
-        ArrayList<Peer> peerQ = new ArrayList<Peer>();
         peerQ.add(peer);
-        peerQsize--;
-        return peerQsize;
+    }
+
+    public int getQueueSize(){
+        return peerQ.size();
     }
 
     /**
@@ -145,9 +157,9 @@ public class Committee
     //	}
     public void notofyPDTtoCommitteeMembers(ClientRequestMessage clientRequestMessage)
     {
-        Iterator<Peer> committeeMembers = this.getPeerOfCommittee();
+        List<Peer> committeeMembers = this.getPeerOfCommittee();
         List<Peer> committeeMembersList = new ArrayList<>();
-        committeeMembers.forEachRemaining(committeeMembersList::add);
+        committeeMembers.iterator().forEachRemaining(committeeMembersList::add);
 
         int s = committeeMembersList.size();
         int i = 0;
@@ -213,7 +225,7 @@ public class Committee
     }
 
     // ## auto_generated
-    public static int getCommitteeID()
+    public int getCommitteeID()
     {
         return id;
     }
@@ -317,10 +329,9 @@ public class Committee
     }
 
     // ## auto_generated
-    public ListIterator<Peer> getPeerOfCommittee()
+    public List<Peer> getPeerOfCommittee()
     {
-        ListIterator<Peer> iter = PeerOfCommittee.listIterator();
-        return iter;
+        return PeerOfCommittee;
     }
 
     // ## auto_generated
@@ -334,13 +345,13 @@ public class Committee
     //	}
 
     // ## auto_generated
-    public Peer newPeerOfCommittee()
-    {
-        Peer newPeer = new Peer();
-        newPeer._setCommitteeOfPeer(this);
-        PeerOfCommittee.add(newPeer);
-        return newPeer;
-    }
+//    public Peer newPeerOfCommittee()
+//    {
+//        Peer newPeer = new Peer();
+//        newPeer._setCommitteeOfPeer(this);
+//        PeerOfCommittee.add(newPeer);
+//        return newPeer;
+//    }
 
     // ## auto_generated
     public void _removePeerOfCommittee(Peer p_Peer)
@@ -354,6 +365,91 @@ public class Committee
         p_Peer._setCommitteeOfPeer(null);
         PeerOfCommittee.remove(p_Peer);
         p_Peer = null;
+    }
+
+    public Peer selectLeaderPeer()
+    {
+
+        Random r = new Random();
+        List<Peer> peerOfCommittee = getPeerOfCommittee();
+        if (peerOfCommittee.isEmpty())
+        {
+            return null;
+        }
+        return peerOfCommittee.get(r.nextInt(peerOfCommittee.size()));
+    }
+
+    public Peer switchPeer(Peer peer)
+    {
+        if(peer.getActualQuota() == 0){
+
+            // remove the peer from committee
+            this._removePeerOfCommittee(peer);
+            peer.resetQuota();
+            // get a waiting peer in the queue and remove it from the queue
+            if(getQueueSize()>0)
+            {
+                int waitingPeerIndex = new Random().nextInt(getQueueSize());
+                var waitingPeer = peerQ.get(waitingPeerIndex);
+                peerQ.remove(waitingPeer);
+
+                // insert the initial committee peer in the queue
+                this.insertPeerToQueue(peer);
+
+                // insert the waiting peer in the committee
+                this._addPeerOfCommittee(waitingPeer);
+                return waitingPeer;
+            }
+            this.insertPeerToQueue(peer);
+            return null;
+        }
+        return peer;
+    }
+
+    public void subscribe(PBFTsimulator simulator){
+        simulator.subscribe(this);
+    }
+
+    public void onMsgReceived(String msg){
+        checkMsg(msg);
+        executeProtocol();
+    }
+
+    public int getTimeSpent()
+    {
+        return timeSpent;
+    }
+
+    public int getNumberOfMessages()
+    {
+        return numberOfMessages;
+    }
+
+    private void checkMsg(String msg)
+    {
+        System.out.println("["+id+"]------ checking : " + msg.substring(0,30));
+        numberOfMessages++;
+        String timeString = msg.substring(msg.indexOf("Total time: "),msg.indexOf("Total time: ")+30);
+        String[] splitTimeString = timeString.split(" ");
+        timeSpent += Integer.parseInt(splitTimeString[2]);
+        System.out.println("["+id+"] ("+System.currentTimeMillis()+") Cumulative time spent is : " + timeSpent);
+        System.out.println("["+id+"] ("+System.currentTimeMillis()+") mean time of the committee : " + ((float)timeSpent/numberOfMessages));
+    }
+
+    private void executeProtocol()
+    {
+        Peer leaderPeer = selectLeaderPeer();
+        System.out.println("["+id+"] leader peer is: " + leaderPeer.getAddress() + " (" + leaderPeer.getActualQuota() + "/"+leaderPeer.quotaInitial + ")");
+        leaderPeer.updateActualQuota(1);
+        System.out.println("["+id+"] updated quotat is " + leaderPeer.getActualQuota() + "/"+leaderPeer.quotaInitial + ")");
+        var newPeer = switchPeer(leaderPeer);
+        if(newPeer != null)
+        {
+            System.out.println("[" + id + "] New Committee Peer is " + newPeer.getAddress() + " (" + newPeer.getActualQuota() + "/" + newPeer.quotaInitial + ")");
+        }
+        else{
+            System.out.println("[" + id + "] Seat is free!");
+        }
     }
 
     // ## auto_generated

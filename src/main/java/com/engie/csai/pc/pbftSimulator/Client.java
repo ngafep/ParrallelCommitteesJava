@@ -111,11 +111,20 @@ public class Client {
 			repMsgs.remove(t);
 			/*System.out.println("【Stable】客户端"+id+"在"+t
 					+"时间请求的消息已经得到了f+1条reply，进入稳态，共耗时"+(repMsg.rcvtime - t)+"毫秒,此时占用带宽为"+Simulator.inFlyMsgLen+"B");*/
-
-			System.out.println("【Stable】Client"+ clientId +" at time "+t +"."
-					+"The request message has received f+1 identical reply and its state became stable." +
-					"Total time: "+(repMsg.rcvtime - t)+" millisecond." +
-					"The occupied bandwidth: "+ pbfTsimulator.getInFlyMsgLen()+" Bytes.");
+			pbfTsimulator.increment();
+			String msgNotified = "【Stable】Client: " + clientId + " View Number: " + repMsg.viewNumber + " at time " + t + "."
+					+ "The request message index: " + pbfTsimulator.getRequestIndex() + " has received f+1 identical reply and its state became stable." +
+					"Total time: " + (repMsg.rcvtime - t) + " millisecond." +
+					"The occupied bandwidth: " + pbfTsimulator.getInFlyMsgLen() + " Bytes.";
+			System.out.println(msgNotified);
+			pbfTsimulator.notify(msgNotified);
+			// After this message, the effects pf the consensus for each request must be
+			// applied and considered in a random-selected node (peer) in related committee
+			// in such a way that for each consensus round done for each request, one unit of
+			// the peer's quota (one of the peers in the committee as random) must be reduced.
+			// And then it should be verified if its quota has become zero or not.
+			// If yes, the peer must leave the committee and wait in the queue
+			// in order to join the committee once again.
 		}
 	}
 	

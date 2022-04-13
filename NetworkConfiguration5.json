@@ -24,6 +24,22 @@
 	  "numberOfRequests": 30,
       "capacity": 10,
       "pql": 8
+    },
+    {
+	"name": "category 4",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+	  "numberOfRequests": 30,
+      "capacity": 10,
+      "pql": 8
+    },
+    {
+	"name": "category 5",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+	  "numberOfRequests": 30,
+      "capacity": 10,
+      "pql": 8
     }
   ]
 }

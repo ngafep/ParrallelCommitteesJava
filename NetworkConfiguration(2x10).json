@@ -1,0 +1,21 @@
+{
+  "networkConfig":
+  [
+    {
+      "name": "category 1",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 30,
+      "capacity": 10,
+      "pql": 8
+    },
+    {
+      "name": "category 2",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 30,
+      "capacity": 10,
+      "pql": 8
+    }
+  ]
+}

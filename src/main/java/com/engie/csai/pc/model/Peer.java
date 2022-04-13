@@ -16,6 +16,9 @@ import java.util.List;
 
 import com.engie.csai.pc.actors.Administrator;
 import com.engie.csai.pc.actors.User;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 //----------------------------------------------------------------------------
 // com/engie/csai/pc/model/Peer.java                                                                  
@@ -23,7 +26,10 @@ import com.engie.csai.pc.actors.User;
 
 //## package com::engie::csai::pc::model 
 
-//## class Peer 
+//## class Peer
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Peer
 {
 
@@ -62,10 +68,6 @@ public class Peer
     // Constructors
 
     // ## auto_generated
-    public Peer()
-    {
-    }
-
     public Peer(String address, String catId, float tokensInitial, float tokensCurrent, float tokensLocked,
                 int quotaInitial, int quotaCurrent, String privateKey, String publicKey, Committee committeeOfPeer,
                 boolean isProcessor, String powAnswer, ClientRequestMessage clientRequestMessage, int target, boolean waiteInQ)
@@ -101,7 +103,9 @@ public class Peer
 
     public int updateActualQuota(int usedQuota)
     {
-        return quotaCurrent = quotaCurrent - usedQuota;
+        if(quotaCurrent - usedQuota>=0)
+            quotaCurrent = quotaCurrent - usedQuota;
+        return quotaCurrent;
     }
 
     // ## operation insertTxInFiFoQ()
@@ -116,7 +120,7 @@ public class Peer
      * sender signature, receiver address, metadata, and required fees regarding the
      * size of data.
      *
-     * @param sender
+     * // @param sender
      * @param receivers
      * @param fee
      * @param data
@@ -171,12 +175,17 @@ public class Peer
         // #]
     }
 
+    public void resetQuota()
+    {
+        quotaCurrent = quotaInitial;
+    }
+
     /**
      * If number of authorized peers in waiting queue of the committee is more than
      * PQL, using this method, a request for re-configuring the quota is sent to
      * administrator.
      *
-     * @param Cat
+     * // @param Cat
      */
     public void resetQuotaNotification(String catId)
     {
@@ -213,9 +222,10 @@ public class Peer
     }
 
     // ## auto_generated
-    public void setAddress(String p_address)
+    public Peer setAddress(String p_address)
     {
         address = p_address;
+        return this;
     }
 
     // ## auto_generated

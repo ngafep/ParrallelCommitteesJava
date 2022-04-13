@@ -1,14 +1,15 @@
 package com.engie.csai.pc.pbftSimulator;
 
+import com.engie.csai.pc.pbftSimulator.subscriber.MessageSubscriber;
 import com.engie.csai.pc.pbftSimulator.message.Message;
 import com.engie.csai.pc.pbftSimulator.replica.ByztReplica;
 import com.engie.csai.pc.pbftSimulator.replica.Replica;
 
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.Random;
+import java.util.*;
 
 public class PBFTsimulator {
+
+	private final Set<MessageSubscriber> messageSubscribers = new HashSet<>();
 	/**
 	 * About the network configuration in this simulator:
 	 *
@@ -124,6 +125,21 @@ public class PBFTsimulator {
 	private int peerCount; // RN -> numberOfNodes  						//replicas节点的数量(rn) //Number of nodes
 	private int requestCount;					//请求消息总数量 //Total number of request messages
 
+	public int getRequestIndex()
+	{
+		return requestIndex;
+	}
+
+	public void increment()
+	{
+		this.requestIndex++;
+	}
+
+	private int requestIndex;
+
+	public PBFTsimulator(){
+		requestIndex = 0;
+	}
 	public static void main (String[] args){
 		Thread t1 = createPBFTThread();
 		Thread t2 = createPBFTThread();
@@ -218,22 +234,22 @@ public class PBFTsimulator {
 			}
 			inFlyMsgLen -= msg.len;
 			timestamp = msg.rcvtime;
-			if(getNetDelay(inFlyMsgLen, 0) > COLLAPSEDELAY ) {
-				/*System.out.println("【Error】网络消息总负载"+inFlyMsgLen
-						+"B,网络传播时延超过"+COLLAPSEDELAY/1000
-						+"秒，系统已严重拥堵，不可用！");*/
-				/**
-				 * Here, the application should be paused rather than being stopped
-				 * in order to complete the process of current requests.
-				 * The rest of requests should wait in a queue till the process of current requests would be completed.
-				 * And then application will start again to process the rest of requests ...
-				 *
-				 */
-				System.out.println("【Error】Total network message load: "+inFlyMsgLen
-						+"Bytes,Network propagation delay exceeds "+COLLAPSEDELAY/1000
-						+"seconds and system is heavily congested and unavailable!");
-				break; // Break probably should be removed.
-			}
+//			if(getNetDelay(inFlyMsgLen, 0) > COLLAPSEDELAY ) {
+//				/*System.out.println("【Error】网络消息总负载"+inFlyMsgLen
+//						+"B,网络传播时延超过"+COLLAPSEDELAY/1000
+//						+"秒，系统已严重拥堵，不可用！");*/
+//				/**
+//				 * Here, the application should be paused rather than being stopped
+//				 * in order to complete the process of current requests.
+//				 * The rest of requests should wait in a queue till the process of current requests would be completed.
+//				 * And then application will start again to process the rest of requests ...
+//				 *
+//				 */
+//				System.out.println("【Error】Total network message load: "+inFlyMsgLen
+//						+"Bytes,Network propagation delay exceeds "+COLLAPSEDELAY/1000
+//						+"seconds and system is heavily congested and unavailable!");
+//				break; // Break probably should be removed.
+//			}
 		}
 		long totalTime = 0;
 		long totalStableMsg = 0;
@@ -345,5 +361,14 @@ public class PBFTsimulator {
 	public int getRequestCount()
 	{
 		return requestCount;
+	}
+
+	public void subscribe(MessageSubscriber committee)
+	{
+		messageSubscribers.add(committee);
+	}
+
+	public void notify(String msg){
+		messageSubscribers.forEach(listener -> listener.onMsgReceived(msg));
 	}
 }

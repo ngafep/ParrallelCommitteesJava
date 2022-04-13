@@ -89,9 +89,8 @@ public class Network
         p_Category = null;
     }
 
-    public void addCommittee(int comId, int capCom, int pql, String catId, int freeSeats)
+    public void addCommittee(Committee committee, int capCom, int pql, String catId, int freeSeats)
     {
-        Committee committee = new Committee(comId, capCom, pql, freeSeats);
         Category category = categories.get(catId);
         category.__setCommitteeOfCategory(committee);
         committee.__setCategoryOfCommittee(category);

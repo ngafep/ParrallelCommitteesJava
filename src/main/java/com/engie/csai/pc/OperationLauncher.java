@@ -1,9 +1,6 @@
 package com.engie.csai.pc;
 
-import com.engie.csai.pc.model.ClientRequestMessage;
-import com.engie.csai.pc.model.JsonReaderInParallel;
-import com.engie.csai.pc.model.RecvRabbitMQ;
-import com.engie.csai.pc.model.SendRabbitMQ;
+import com.engie.csai.pc.model.*;
 import com.engie.csai.pc.model.json.ClientRequestJson;
 import com.engie.csai.pc.model.json.ClientRequestsJson;
 
@@ -18,12 +15,14 @@ public class OperationLauncher extends Thread
     private final String catId;
     private final int numberOfPeer;
     private final int nbRequests;
+    private final Committee committee;
 
-    public OperationLauncher(String catId, int numberOfPeer, int nbRequests)
+    public OperationLauncher(String catId, int numberOfPeer, int nbRequests, Committee committee)
     {
         this.catId = catId;
         this.numberOfPeer = numberOfPeer;
         this.nbRequests = nbRequests;
+        this.committee = committee;
     }
 
 
@@ -40,7 +39,7 @@ public class OperationLauncher extends Thread
     }
 
     private void launchOperationForOneCategoryWithoutRabbitMQ() throws Exception{
-        RecvRabbitMQ.standbyForReceiveMessages(catId, "Queue" + catId);
+        RecvRabbitMQ.standbyForReceiveMessages(catId, "Queue" + catId, committee);
 
         SendRabbitMQ.send(catId, "Queue" + catId);
 
@@ -62,7 +61,7 @@ public class OperationLauncher extends Thread
         RecvRabbitMQ.addNumberOfClientsForCategory(catId, clientsInJson.size());
         RecvRabbitMQ.addNumberOfPeersForCategory(catId, numberOfPeer);
         RecvRabbitMQ.addNumberOfRequestsForCategory(catId, nbRequests);
-        RecvRabbitMQ.standbyForReceiveMessages(catId, "Queue" + catId);
+//        RecvRabbitMQ.standbyForReceiveMessages(catId, "Queue" + catId);
         for (ClientRequestJson requestJson : requestJsonList)
         {
             assert false;

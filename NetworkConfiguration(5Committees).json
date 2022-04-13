@@ -1,0 +1,46 @@
+{
+  "networkConfig":
+  [
+    {
+      "name": "category 1",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 2",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 3",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 4",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    }
+  ,
+    {
+      "name": "category 5",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    }
+  ]
+}

@@ -20,6 +20,23 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+/*
+* *
+* *
+* *
+* *
+    Important note:
+    In order to apply the effects of each round of consensus in related committee
+    we do not need to consider everything that is done in PBFT algorithm, such as
+    the view change, leader change etc. but it is enough to select a peer randomly
+    in related committee in order to reduce its quota one unit after processing of each client's request.
+    Then, if new quota is zero, peer should leave the committee and wait in the queue
+    in order for joining the committee again. The selection process from the peers queue is randomly.
+* *
+* *
+* *
+* *
+ */
 //----------------------------------------------------------------------------
 // ParallelCommitteesMain.java
 //----------------------------------------------------------------------------
@@ -58,8 +75,10 @@ public class ParallelCommitteesMain
         int comCapacityForAllCats;
         int pqlForAllCats;
 
+        System.out.println("Please provide a config file path");
+        String configFile = sc.next();
         //Reading configuration JSON file:
-        final CategoriesConfigJson config = readNetworkConfigFromJsonFile();
+        final CategoriesConfigJson config = readNetworkConfigFromJsonFile(configFile);
         //End reading config file.
 
         // Showing network configuration information
@@ -100,6 +119,8 @@ public class ParallelCommitteesMain
         // creating committees
         Committee[] com = createCommittees(numberOfCat, catId, comId, quotaInit, tokensInit, comCapacity,
                 pql, freeSeats, consensusId[2], network);
+
+
 
         /**** **** ****
          **** User ****
@@ -248,11 +269,14 @@ public class ParallelCommitteesMain
          */
         if (Objects.equals(Consensus.getConsAlg(), "pbft"))
         {
-            System.out.println("PBFT starts ...");
 
             ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[0], numberOfPeers[0], nbRequests[0]), 3, 20, TimeUnit.SECONDS);
-            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[1], numberOfPeers[1], nbRequests[1]), 3, 20, TimeUnit.SECONDS);
+            long start = System.currentTimeMillis();
+            System.out.println("PBFT starts ... " + start);
+            for (int categoryIndex = 0; categoryIndex < numberOfCat; categoryIndex++){
+                scheduler.scheduleAtFixedRate(new OperationLauncher(catId[categoryIndex], numberOfPeers[categoryIndex], nbRequests[categoryIndex], committee[categoryIndex]), 3, 20, TimeUnit.SECONDS);
+            }
+
 //            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[1], numberOfPeers[1], nbRequests[1]), 3, 20, TimeUnit.SECONDS);
 //            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[2], numberOfPeers[2], nbRequests[2]), 3, 20, TimeUnit.SECONDS);
 
@@ -425,7 +449,7 @@ public class ParallelCommitteesMain
             for (int requestIndex = 0; requestIndex < numberOfRequestsInJSON; requestIndex++)
             {
                 clientRequestJsonElements = new ClientRequestJson().data(data[fileIndex][requestIndex]).fee((float) data[fileIndex][requestIndex].length())
-                        .senderSignature("senderSignature_" + new Random().nextInt(100, 107)).receiverAddress("receiverAddress").tokenToSend(requestIndex);
+                        .senderSignature("senderSignature_" + new Random().nextInt(100, 103)).receiverAddress("receiverAddress").tokenToSend(requestIndex);
                 json.addRequestsItem(clientRequestJsonElements);
             }
             mapper.writeValue(Paths.get("D:\\Parallel-Committees-Java-Code\\input/clientRequest_" + cat + ".json").toFile(), json);
@@ -465,7 +489,7 @@ public class ParallelCommitteesMain
                 /*
                  * Initialize category
                  */
-                category[committeeIndex] = network.getCategories().get(catId[0]);
+                category[committeeIndex] = network.getCategories().get(catId[committeeIndex]);
 
                 /*
                  * Getting related committee for selected category
@@ -510,9 +534,9 @@ public class ParallelCommitteesMain
                             com[committeeIndex].reduceActualFreeSeats();
                         } else
                         {
-                            peerQsize = committee[committeeIndex].insertPeerToQueue(peer[committeeIndex][peerIndex]);
+                            committee[committeeIndex].insertPeerToQueue(peer[committeeIndex][peerIndex]);
                             peer[committeeIndex][peerIndex].waiteInQ = true;
-                            if (peerQsize > committee[committeeIndex].getPQL())
+                            if (committee[committeeIndex].getQueueSize() > committee[committeeIndex].getPQL())
                             {
                                 peer[committeeIndex][peerIndex].resetQuotaNotification(catId[0]);
                             }
@@ -549,8 +573,8 @@ public class ParallelCommitteesMain
             /**
              * Creating committees
              */
-            com[committeeIndex] = new Committee(comId[committeeIndex], comCapacity[committeeIndex], pql[committeeIndex], freeSeats[committeeIndex]);
-            network.addCommittee(comId[committeeIndex], comCapacity[committeeIndex], pql[committeeIndex], catId[committeeIndex], freeSeats[committeeIndex]);
+            com[committeeIndex] = new Committee(committeeIndex, comCapacity[committeeIndex], pql[committeeIndex], freeSeats[committeeIndex]);
+            network.addCommittee(com[committeeIndex], comCapacity[committeeIndex], pql[committeeIndex], catId[committeeIndex], freeSeats[committeeIndex]);
 
             /**
              * Setting peer for each category
@@ -581,12 +605,12 @@ public class ParallelCommitteesMain
         }
     }
 
-    private static CategoriesConfigJson readNetworkConfigFromJsonFile() throws IOException
+    private static CategoriesConfigJson readNetworkConfigFromJsonFile(String configFile) throws IOException
     {
             ObjectMapper mapper = new ObjectMapper();
             //PDTsJson pdTsJson = mapper.readValue(Paths.get("PC_UML_IBM/Files/pdts_" + fileIndex + ".json").toFile(), PDTsJson.class);
 
-            return mapper.readValue(new FileReader("NetworkConfiguration.json"), CategoriesConfigJson.class);
+            return mapper.readValue(new FileReader(configFile), CategoriesConfigJson.class);
     }
 
 } // end class ParallelCommitteesMain

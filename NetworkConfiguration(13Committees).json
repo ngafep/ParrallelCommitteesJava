@@ -1,0 +1,109 @@
+{
+  "networkConfig":
+  [
+    {
+      "name": "category 1",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 2",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 3",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 4",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 5",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 6",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 7",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 8",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 9",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 10",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 11",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 12",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    },
+    {
+      "name": "category 13",
+      "numberOfQuota": 3,
+      "numberOfInitialTokens": 100,
+      "numberOfRequests": 5000,
+      "capacity": 20,
+      "pql": 20
+    }
+  ]
+}
