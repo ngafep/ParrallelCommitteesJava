@@ -45,7 +45,7 @@ public class RecvRabbitMQ
                         ClientRequestMessage[] clientRequestMessages = new ClientRequestMessage[0];
                         try
                         {
-                            clientRequestMessages = launchOperationForOneCategory(new String(body, StandardCharsets.UTF_8));
+                            clientRequestMessages = launchOperationForOneCategory(new String(body, StandardCharsets.UTF_8), committee.getPeerOfCommittee().size());
                         } catch (TimeoutException e)
                         {
                             e.printStackTrace();
@@ -75,7 +75,7 @@ public class RecvRabbitMQ
                 });
     }
 
-    private static ClientRequestMessage[] launchOperationForOneCategory(String catId) throws IOException, TimeoutException
+    private static ClientRequestMessage[] launchOperationForOneCategory(String catId, int peerCount) throws IOException, TimeoutException
     {
         ClientRequestsJson jsonFile = new JsonReaderInParallel().parseJsonFile(catId);
         if(jsonFile == null){
@@ -88,7 +88,7 @@ public class RecvRabbitMQ
         List<ClientRequestJson> requestJsonList = jsonFile.getRequests();
         Set<String> clientsInJson = requestJsonList.stream().map(req -> req.getSenderSignature()).collect(Collectors.toSet());
         RecvRabbitMQ.addNumberOfClientsForCategory(catId, clientsInJson.size());
-        RecvRabbitMQ.addNumberOfPeersForCategory(catId, 5);
+        RecvRabbitMQ.addNumberOfPeersForCategory(catId, peerCount);
         RecvRabbitMQ.addNumberOfRequestsForCategory(catId, jsonFile.getRequests().size());
         for (ClientRequestJson requestJson : requestJsonList)
         {

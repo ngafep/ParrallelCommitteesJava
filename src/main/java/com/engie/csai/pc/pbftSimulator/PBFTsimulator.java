@@ -142,9 +142,7 @@ public class PBFTsimulator {
 	}
 	public static void main (String[] args){
 		Thread t1 = createPBFTThread();
-		Thread t2 = createPBFTThread();
 		t1.start();
-		t2.start();
 	}
 
 	private static Thread createPBFTThread()

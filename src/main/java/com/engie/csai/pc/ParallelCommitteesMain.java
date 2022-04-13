@@ -270,11 +270,12 @@ public class ParallelCommitteesMain
         if (Objects.equals(Consensus.getConsAlg(), "pbft"))
         {
 
-            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(15);
             long start = System.currentTimeMillis();
             System.out.println("PBFT starts ... " + start);
             for (int categoryIndex = 0; categoryIndex < numberOfCat; categoryIndex++){
-                scheduler.scheduleAtFixedRate(new OperationLauncher(catId[categoryIndex], numberOfPeers[categoryIndex], nbRequests[categoryIndex], committee[categoryIndex]), 3, 20, TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(new OperationLauncher(catId[categoryIndex], numberOfPeers[categoryIndex], nbRequests[categoryIndex], committee[categoryIndex]), 1, 1, TimeUnit.SECONDS);
+
             }
 
 //            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[1], numberOfPeers[1], nbRequests[1]), 3, 20, TimeUnit.SECONDS);
@@ -365,6 +366,7 @@ public class ParallelCommitteesMain
 
     private static void clientRequest_a_part_from_Json_file(int numberOfCat, Peer[][] peer, KeyPair[][] kPairSign, int[] numberOfPeers, int numberOfRequestsInJSON, ArrayList<String> senderSignature, String[] receiverAddresses, String[][] data, String[] signatureStr, float[] tokenToSend) throws Exception
     {
+
         float[] feeToSpend;
         int randomPeer;
         ClientRequestMessage[][] clientRequestMessage;
