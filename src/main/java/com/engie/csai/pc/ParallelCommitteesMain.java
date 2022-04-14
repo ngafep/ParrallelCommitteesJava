@@ -88,7 +88,6 @@ public class ParallelCommitteesMain {
             .size();
         LOGGER.info(() -> "Number of committees: " + numberOfCat);
         // Applying configuration to the network
-        String[] catId = new String[numberOfCat];
 
         // Creating network
         Network network = new Network();
@@ -223,7 +222,7 @@ public class ParallelCommitteesMain {
         /*
          * Create JSON files (Begin)
          */
-        createJSONfilesClientRequests(catId, numberOfRequestsInJSON, data);
+        createJSONfilesClientRequests(numberOfRequestsInJSON, data, numberOfCat);
 
         /*
          * Reading all JSON files in parallel by Threads
@@ -236,22 +235,22 @@ public class ParallelCommitteesMain {
             final long start = System.currentTimeMillis();
             LOGGER.info(() -> "PBFT starts ... " + start);
             for (int categoryIndex = 0; categoryIndex < numberOfCat; categoryIndex++) {
-                scheduler.scheduleAtFixedRate(new OperationLauncher(catId[categoryIndex], com[categoryIndex]), 1, 1, TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(new OperationLauncher("Cat"+categoryIndex, com[categoryIndex]), 1, 1, TimeUnit.SECONDS);
             }
         }
     }
 
     private static void createJSONfilesClientRequests(
-        String[] catId,
         int numberOfRequestsInJSON,
-        String[][] data
+        String[][] data,
+        int categoryCount
     )
         throws IOException {
         ObjectMapper mapper;
         mapper = new ObjectMapper();
 
         int fileIndex = 0;
-        for (String cat : catId) {
+        while (fileIndex<categoryCount) {
             ClientRequestsJson json = new ClientRequestsJson();
             ClientRequestJson clientRequestJsonElements;
             final var random = new Random();
@@ -263,7 +262,7 @@ public class ParallelCommitteesMain {
                     .tokenToSend(requestIndex);
                 json.addRequestsItem(clientRequestJsonElements);
             }
-            mapper.writeValue(Paths.get("clientRequest_" + cat + ".json")
+            mapper.writeValue(Paths.get("clientRequest_Cat" + fileIndex + ".json")
                 .toFile(), json);
             fileIndex++;
         }
