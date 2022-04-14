@@ -26,11 +26,6 @@ public class CommitteeService implements MessageSubscriber
     Map<String, PBFTsimulator> pbftSimulatorPerCategory = new HashMap<>();
     Map<String, Committee> committeePerCategory = new HashMap<>();
 
-    private PBFTsimulator getSimulator(String category){
-        pbftSimulatorPerCategory.putIfAbsent(category, new PBFTsimulator());
-        return pbftSimulatorPerCategory.get(category);
-    }
-
     public void register(String category, Committee committee){
         pbftSimulatorPerCategory.putIfAbsent(category, new PBFTsimulator());
         committeePerCategory.putIfAbsent(category, committee);
@@ -38,11 +33,15 @@ public class CommitteeService implements MessageSubscriber
 
 
     public void callConsensus(String category, Integer clientCount, Integer peerCount, Integer requestCount, String clientRequest){
+
         PBFTsimulator simulator = pbftSimulatorPerCategory.get(category);
         var committee = committeePerCategory.get(category);
         committee.subscribe(simulator);
         simulator.subscribe(this);
+        long start = System.currentTimeMillis();
         simulator.launch(clientCount, peerCount, requestCount);
+        long end = System.currentTimeMillis();
+        System.out.println("Duration for " + category + " = " + (end-start) + " milliseconds");
     }
 
 

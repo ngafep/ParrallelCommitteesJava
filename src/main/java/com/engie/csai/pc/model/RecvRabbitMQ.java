@@ -1,5 +1,14 @@
 package com.engie.csai.pc.model;
 
+import com.engie.csai.pc.model.json.ClientRequestJson;
+import com.engie.csai.pc.model.json.ClientRequestsJson;
+import com.engie.csai.pc.service.CommitteeService;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -10,19 +19,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import com.engie.csai.pc.model.json.ClientRequestJson;
-import com.engie.csai.pc.model.json.ClientRequestsJson;
-import com.engie.csai.pc.service.CommitteeService;
-import com.rabbitmq.client.*;
-
-public class RecvRabbitMQ
-{
+public class RecvRabbitMQ {
     private static Map<String, Integer> numberOfClientsPerCategory = new ConcurrentHashMap<>();
     private static Map<String, Integer> numberOfPeersPerCategory = new ConcurrentHashMap<>();
     private static Map<String, Integer> numberOfRequestsPerCategory = new ConcurrentHashMap<>();
 
-    public static void standbyForReceiveMessages(String category, String queueName, Committee committee) throws IOException, TimeoutException
-    {
+    public static void standbyForReceiveMessages(
+        String category,
+        String queueName,
+        Committee committee
+    )
+        throws IOException, TimeoutException {
         CommitteeService service = CommitteeService.getInstance();
         service.register(category, committee);
         boolean autoAck = false;
@@ -30,73 +37,55 @@ public class RecvRabbitMQ
         factory.setHost("localhost");
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
-        channel.basicConsume(queueName, autoAck, "myConsumerTag",
-                new DefaultConsumer(channel) {
-                    @Override
-                    public void handleDelivery(String consumerTag,
-                                               Envelope envelope,
-                                               AMQP.BasicProperties properties,
-                                               byte[] body)
-                            throws IOException
-                    {
-                        String routingKey = envelope.getRoutingKey();
-                        String contentType = properties.getContentType();
-                        long deliveryTag = envelope.getDeliveryTag();
-                        ClientRequestMessage[] clientRequestMessages = new ClientRequestMessage[0];
-                        try
-                        {
-                            clientRequestMessages = launchOperationForOneCategory(new String(body, StandardCharsets.UTF_8), committee.getPeerOfCommittee().size());
-                        } catch (TimeoutException e)
-                        {
-                            e.printStackTrace();
-                        }
-
-                        service.callConsensus(category, numberOfClientsPerCategory.get(category), numberOfPeersPerCategory.get(category), numberOfRequestsPerCategory.get(category), clientRequestMessages[0].toString());
-
-//                        for(ClientRequestMessage clientRequestMessage : clientRequestMessages )
-//                        {
-//                            String message = clientRequestMessage.toString();
-//
-//                            //String message = new String(body, StandardCharsets.UTF_8);
-//                            // get file
-//                            // parse file and get messages
-//                            // loop on consensus for each request
-//                            System.out.flush();
-//                            System.out.println("A new client request is received as follows: " + message + "'" + "\n" + "\n");
-//                        /*
-//                        Launching PBFT
-//                         */
-//                            service.callConsensus(category, numberOfClientsPerCategory.get(category), numberOfPeersPerCategory.get(category), numberOfRequestsPerCategory.get(category), message);
-//
-//                            channel.basicAck(deliveryTag, false);
-//                            break;
-//                        }
-                    }
-                });
+        channel.basicConsume(queueName, autoAck, "myConsumerTag", new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(
+                String consumerTag,
+                Envelope envelope,
+                AMQP.BasicProperties properties,
+                byte[] body
+            )
+                throws IOException {
+                String routingKey = envelope.getRoutingKey();
+                String contentType = properties.getContentType();
+                long deliveryTag = envelope.getDeliveryTag();
+                ClientRequestMessage[] clientRequestMessages = new ClientRequestMessage[0];
+                try {
+                    clientRequestMessages = launchOperationForOneCategory(new String(body, StandardCharsets.UTF_8), committee.getPeerOfCommittee()
+                        .size());
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
+                }
+                service.callConsensus(category, numberOfClientsPerCategory.get(category), numberOfPeersPerCategory.get(category), numberOfRequestsPerCategory.get(category), clientRequestMessages[0].toString());
+            }
+        });
     }
 
-    private static ClientRequestMessage[] launchOperationForOneCategory(String catId, int peerCount) throws IOException, TimeoutException
-    {
+    private static ClientRequestMessage[] launchOperationForOneCategory(
+        String catId,
+        int peerCount
+    )
+        throws IOException, TimeoutException {
         ClientRequestsJson jsonFile = new JsonReaderInParallel().parseJsonFile(catId);
-        if(jsonFile == null){
+        if (jsonFile == null) {
             System.out.println("not file found for : " + catId);
             return new ClientRequestMessage[0];
         }
 
-        ClientRequestMessage[] clientRequestExtractedFromJson = new ClientRequestMessage[jsonFile.getRequests().size()]; // -> Client-Request[*category index*][*Client-Request index in that category*]
+        ClientRequestMessage[] clientRequestExtractedFromJson = new ClientRequestMessage[jsonFile.getRequests()
+            .size()]; // -> Client-Request[*category index*][*Client-Request index in that category*]
         int requestIndex = 0;
         List<ClientRequestJson> requestJsonList = jsonFile.getRequests();
-        Set<String> clientsInJson = requestJsonList.stream().map(req -> req.getSenderSignature()).collect(Collectors.toSet());
+        Set<String> clientsInJson = requestJsonList.stream()
+            .map(req -> req.getSenderSignature())
+            .collect(Collectors.toSet());
         RecvRabbitMQ.addNumberOfClientsForCategory(catId, clientsInJson.size());
         RecvRabbitMQ.addNumberOfPeersForCategory(catId, peerCount);
-        RecvRabbitMQ.addNumberOfRequestsForCategory(catId, jsonFile.getRequests().size());
-        for (ClientRequestJson requestJson : requestJsonList)
-        {
+        RecvRabbitMQ.addNumberOfRequestsForCategory(catId, jsonFile.getRequests()
+            .size());
+        for (ClientRequestJson requestJson : requestJsonList) {
             assert false;
-            clientRequestExtractedFromJson[requestIndex] =
-                    new ClientRequestMessage(requestJson.getSenderSignature(), requestJson.getReceiverAddress(), requestJson.getFee(),
-                            requestJson.getData(), requestJson.getTokenToSend(), false,
-                            new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date()));
+            clientRequestExtractedFromJson[requestIndex] = new ClientRequestMessage(requestJson.getSenderSignature(), requestJson.getReceiverAddress(), requestJson.getFee(), requestJson.getData(), requestJson.getTokenToSend(), false, new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date()));
             /**
              * Inserting Client-Requests in related queue of RibbitMQ
              */
@@ -133,23 +122,30 @@ public class RecvRabbitMQ
             // then numberOfRequests in PBFT simulator should be deleted.
             //
 
-//            receiveRequestLaunchPBFT(catId);
+            //            receiveRequestLaunchPBFT(catId);
         }
         return clientRequestExtractedFromJson;
     }
-    public static void addNumberOfClientsForCategory(String catId, int nbClients)
-    {
-        numberOfClientsPerCategory.put(catId,nbClients);
+
+    public static void addNumberOfClientsForCategory(
+        String catId,
+        int nbClients
+    ) {
+        numberOfClientsPerCategory.put(catId, nbClients);
     }
 
-    public static void addNumberOfPeersForCategory(String catId, int numberOfPeers)
-    {
-        numberOfPeersPerCategory.put(catId,numberOfPeers);
+    public static void addNumberOfPeersForCategory(
+        String catId,
+        int numberOfPeers
+    ) {
+        numberOfPeersPerCategory.put(catId, numberOfPeers);
     }
 
-    public static void addNumberOfRequestsForCategory(String catId, int numberOfRequets)
-    {
-        numberOfRequestsPerCategory.put(catId,numberOfRequets);
+    public static void addNumberOfRequestsForCategory(
+        String catId,
+        int numberOfRequets
+    ) {
+        numberOfRequestsPerCategory.put(catId, numberOfRequets);
     }
 
     // private final static String QUEUE_NAME = "hello";
@@ -169,8 +165,8 @@ public class RecvRabbitMQ
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
             System.out.println("Received '" + message + "'" + "\n" + "\n");
             *//**
-             * message should be returned to be used in PBFT launcher.
-             *//*
+     * message should be returned to be used in PBFT launcher.
+     *//*
             PBFTsimulator pbfTsimulator = new PBFTsimulator();
             pbfTsimulator.launch(message);
         };

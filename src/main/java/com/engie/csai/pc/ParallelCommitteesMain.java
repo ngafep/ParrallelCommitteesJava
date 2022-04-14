@@ -275,7 +275,6 @@ public class ParallelCommitteesMain
             System.out.println("PBFT starts ... " + start);
             for (int categoryIndex = 0; categoryIndex < numberOfCat; categoryIndex++){
                 scheduler.scheduleAtFixedRate(new OperationLauncher(catId[categoryIndex], numberOfPeers[categoryIndex], nbRequests[categoryIndex], committee[categoryIndex]), 1, 1, TimeUnit.SECONDS);
-
             }
 
 //            scheduler.scheduleAtFixedRate(new OperationLauncher(catId[1], numberOfPeers[1], nbRequests[1]), 3, 20, TimeUnit.SECONDS);
