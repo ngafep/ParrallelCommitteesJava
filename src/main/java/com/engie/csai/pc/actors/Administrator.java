@@ -78,8 +78,6 @@ public class Administrator {
 		int newQuota = sc.nextInt();
 		peer.resetQuota(newQuota);
 		System.out.println("Quota was reset to a new value: " + newQuota);
-		// #[ operation resetQuotaNotification(int)
-		// #]
 	}
 
 }

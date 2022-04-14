@@ -7,10 +7,11 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ProtocolTest
+class ProtocolTest
 {
 
     private static final Logger LOG = Logger.getLogger(ProtocolTest.class.getName());
@@ -36,7 +37,7 @@ public class ProtocolTest
 
         var leaderPeer = committee.selectLeaderPeer();
 
-        assertTrue(leaderPeer != null);
+        assertNotNull(leaderPeer);
         assertTrue(peers.contains(leaderPeer));
         LOG.info(leaderPeer.getAddress());
     }
@@ -59,7 +60,7 @@ public class ProtocolTest
     {
         Peer peer = Peer.builder().quotaInitial(5).quotaCurrent(5).build();
         peer.updateActualQuota(1);
-        assertEquals(4, peer.getActualQuota());
+        assertEquals(4, peer.getQuotaCurrent());
 
     }
 
@@ -68,7 +69,7 @@ public class ProtocolTest
     {
         Peer peer = Peer.builder().build();
         peer.updateActualQuota(1);
-        assertEquals(0, peer.getActualQuota());
+        assertEquals(0, peer.getQuotaCurrent());
     }
 
     @Test
@@ -184,7 +185,7 @@ public class ProtocolTest
         Peer peer = Peer.builder().quotaInitial(5).quotaCurrent(0).address("p0").build();
         committee._addPeerOfCommittee(peer);
         committee.switchPeer(peer);
-        assertEquals(5,peer.getActualQuota());
+        assertEquals(5,peer.getQuotaCurrent());
     }
 
 

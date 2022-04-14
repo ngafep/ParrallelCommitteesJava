@@ -10,24 +10,16 @@
 
 package com.engie.csai.pc.model;
 
-//## auto_generated
 
 import java.util.HashMap;
 import java.util.Map;
 
-//----------------------------------------------------------------------------
-// com/engie/csai/pc/model/Network.java                                                                  
-//----------------------------------------------------------------------------
-
-//## package com::engie::csai::pc::model 
-
-//## class Network 
 public class Network
 {
 
     protected int noCats; // ## attribute noCats
 
-    protected Map<String, Category> categories = new HashMap<String, Category>(); // ## link CategoryOfNetwork
+    protected Map<String, Category> categories = new HashMap<>(); // ## link CategoryOfNetwork
 
     // Constructors
 
@@ -71,7 +63,6 @@ public class Network
     // ## auto_generated
     public void _addCategoryOfNetwork(Category p_Category)
     {
-        // categories.add(p_Category);
         categories.put(null, null);
     }
 
@@ -81,18 +72,10 @@ public class Network
         categories.remove(p_Category);
     }
 
-    // ## auto_generated
-    public void deleteCategoryOfNetwork(Category p_Category)
-    {
-        p_Category._setNetworkOfCategory(null);
-        categories.remove(p_Category);
-        p_Category = null;
-    }
-
-    public void addCommittee(Committee committee, int capCom, int pql, String catId, int freeSeats)
+    public void addCommittee(Committee committee, String catId)
     {
         Category category = categories.get(catId);
-        category.__setCommitteeOfCategory(committee);
+        category.setCommitteeOfCategory(committee);
         committee.__setCategoryOfCommittee(category);
 
     }
@@ -114,7 +97,3 @@ public class Network
     }
 
 }
-/*********************************************************************
- * File Path :
- * DefaultComponent/DefaultConfig/com/engie/csai/pc/model/Network.java
- *********************************************************************/

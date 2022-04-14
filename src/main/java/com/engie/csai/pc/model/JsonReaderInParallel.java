@@ -25,7 +25,7 @@ public class JsonReaderInParallel
             ObjectMapper mapper = new ObjectMapper();
             //PDTsJson pdTsJson = mapper.readValue(Paths.get("PC_UML_IBM/Files/pdts_" + fileIndex + ".json").toFile(), PDTsJson.class);
 
-            String fileName= "D:\\Parallel-Committees-Java-Code\\input\\clientRequest_" + catId + ".json";
+            String fileName= "clientRequest_" + catId + ".json";
             File file = new File(fileName);
             if(file.exists()){
             ClientRequestsJson clientRequestsJson = mapper.readValue(Paths.get(fileName).toFile(), ClientRequestsJson.class);

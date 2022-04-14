@@ -95,40 +95,9 @@ public class Category
     }
 
     // ## auto_generated
-    public void __setCommitteeOfCategory(Committee p_Committee)
+    public void setCommitteeOfCategory(Committee p_Committee)
     {
         CommitteeOfCategory = p_Committee;
-    }
-
-    // ## auto_generated
-    public void _setCommitteeOfCategory(Committee p_Committee)
-    {
-        if (CommitteeOfCategory != null)
-        {
-            CommitteeOfCategory.__setCategoryOfCommittee(null);
-        }
-        __setCommitteeOfCategory(p_Committee);
-    }
-
-    // ## auto_generated
-    public Committee newCommitteeOfCategory()
-    {
-        CommitteeOfCategory = new Committee();
-        CommitteeOfCategory._setCategoryOfCommittee(this);
-        return CommitteeOfCategory;
-    }
-
-    // ## auto_generated
-    public void deleteCommitteeOfCategory()
-    {
-        CommitteeOfCategory.__setCategoryOfCommittee(null);
-        CommitteeOfCategory = null;
-    }
-
-    // ## auto_generated
-    public Network getNetworkOfCategory()
-    {
-        return NetworkOfCategory;
     }
 
     // ## auto_generated
@@ -232,31 +201,4 @@ public class Category
         }
         __setConsensusOfCategory(p_Consensus);
     }
-
-    // ## auto_generated
-    public Consensus newConsensusOfCategory()
-    {
-        ConsensusOfCategory = new Consensus(id);
-        ConsensusOfCategory._setCategoryOfConsensus(this);
-        return ConsensusOfCategory;
-    }
-
-    // ## auto_generated
-    public void deleteConsensusOfCategory()
-    {
-        ConsensusOfCategory.__setCategoryOfConsensus(null);
-        ConsensusOfCategory = null;
-    }
-
-    // ## auto_generated
-    protected void initRelations()
-    {
-        CommitteeOfCategory = newCommitteeOfCategory();
-        ConsensusOfCategory = newConsensusOfCategory();
-    }
-
 }
-/*********************************************************************
- * File Path :
- * DefaultComponent/DefaultConfig/com/engie/csai/pc/model/Category.java
- *********************************************************************/
