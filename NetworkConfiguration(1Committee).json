@@ -6,8 +6,8 @@
       "numberOfQuota": 3,
       "numberOfInitialTokens": 100,
       "numberOfRequests": 1,
-      "capacity": 20,
-      "pql": 20
+      "capacity": 100,
+      "pql": 100
     }
   ]
 }
