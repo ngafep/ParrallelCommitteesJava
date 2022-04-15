@@ -37,6 +37,8 @@ public class RecvRabbitMQ {
         factory.setHost("localhost");
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
+        channel.queueDeclare(queueName, false, false, false, null);
+
         channel.basicConsume(queueName, autoAck, "myConsumerTag", new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(
