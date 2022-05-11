@@ -5,9 +5,9 @@
 	"name": "category 1",
       "numberOfQuota": 3,
       "numberOfInitialTokens": 100,
-      "numberOfRequests": 5000,
-      "capacity": 20,
-      "pql": 20
+      "numberOfRequests": 1,
+      "capacity": 100,
+      "pql": 100
     }
   ]
 }
