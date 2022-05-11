@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: pc
+  name: pc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pc
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: pc
+    spec:
+      containers:
+        - image: harbor.preprod.csai.crigen.myengie.com/siamak/pc:0.0.1
+          name: pc
+          resources: {}
+status: {}
