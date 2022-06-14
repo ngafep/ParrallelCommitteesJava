@@ -19,6 +19,7 @@ public class Network
 
     protected int noCats; // ## attribute noCats
 
+
     protected Map<String, Category> categories = new HashMap<>(); // ## link CategoryOfNetwork
 
     // Constructors

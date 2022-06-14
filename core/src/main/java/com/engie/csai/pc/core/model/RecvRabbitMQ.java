@@ -1,5 +1,6 @@
 package com.engie.csai.pc.core.model;
 
+import com.engie.csai.pc.core.consensus.ConsensusSimulator;
 import com.engie.csai.pc.core.model.json.ClientRequestJson;
 import com.engie.csai.pc.core.model.json.ClientRequestsJson;
 import com.engie.csai.pc.core.service.CommitteeService;
@@ -28,10 +29,11 @@ public class RecvRabbitMQ {
         String category,
         String queueName,
         Committee committee,
-        CommitteeService service
+        CommitteeService service,
+        ConsensusSimulator consensus
     )
         throws IOException, TimeoutException {
-        service.register(category, committee);
+        service.register(category, committee ,consensus);
         boolean autoAck = false;
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");

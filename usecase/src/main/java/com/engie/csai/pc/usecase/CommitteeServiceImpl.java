@@ -28,8 +28,8 @@ public class CommitteeServiceImpl implements MessageSubscriber, CommitteeService
     Map<String, ConsensusSimulator> pbftSimulatorPerCategory = new HashMap<>();
     Map<String, Committee> committeePerCategory = new HashMap<>();
 
-    public void register(String category, Committee committee){
-        pbftSimulatorPerCategory.putIfAbsent(category, new PBFTsimulator());
+    public void register(String category, Committee committee, ConsensusSimulator consensus){
+        pbftSimulatorPerCategory.putIfAbsent(category, consensus);
         committeePerCategory.putIfAbsent(category, committee);
     }
 

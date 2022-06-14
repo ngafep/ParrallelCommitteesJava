@@ -1,8 +1,8 @@
 package com.engie.csai.pc.main;
 
-import com.engie.csai.pc.consensus.launcher.OperationLauncher;
+import com.engie.csai.pc.consensus.launcher.PBFTLauncher;
+import com.engie.csai.pc.consensus.launcher.PaxosLauncher;
 import com.engie.csai.pc.core.model.Committee;
-import com.engie.csai.pc.core.model.Consensus;
 import com.engie.csai.pc.core.model.KeyGenerator;
 import com.engie.csai.pc.core.model.Network;
 import com.engie.csai.pc.core.model.Peer;
@@ -231,13 +231,16 @@ public class ParallelCommitteesMain {
          * then parsing JSON files to create Client-Requests of Client-Request Class type
          * and then sending Client-Requests through RabbitMQ (Each queue serves a committee.)
          */
-        if (Objects.equals(Consensus.getConsAlg(), "pbft")) {
 
-            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(15);
-            final long start = System.currentTimeMillis();
-            LOGGER.info(() -> "PBFT starts ... " + start);
-            for (int categoryIndex = 0; categoryIndex < numberOfCat; categoryIndex++) {
-                scheduler.scheduleAtFixedRate(new OperationLauncher("Cat"+categoryIndex, com[categoryIndex], CommitteeServiceImpl.getInstance()), 1, 1, TimeUnit.SECONDS);
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(15);
+        final long start = System.currentTimeMillis();
+        LOGGER.info(() -> "Consensus starts ... " + start);
+        for (int categoryIndex = 0; categoryIndex < numberOfCat; categoryIndex++) {
+            if (Objects.equals(network.getCategories().get(getCatName(categoryIndex)).getConsensusOfCategory().getConsAlg(), "pbft")) {
+                scheduler.scheduleAtFixedRate(new PBFTLauncher(getCatName(categoryIndex), com[categoryIndex], CommitteeServiceImpl.getInstance()), 1, 1, TimeUnit.SECONDS);
+            }
+            else if (Objects.equals(network.getCategories().get(getCatName(categoryIndex)).getConsensusOfCategory().getConsAlg(), "Paxos")) {
+                scheduler.scheduleAtFixedRate(new PaxosLauncher(getCatName(categoryIndex), com[categoryIndex], CommitteeServiceImpl.getInstance()), 1, 1, TimeUnit.SECONDS);
             }
         }
     }
@@ -252,7 +255,7 @@ public class ParallelCommitteesMain {
         mapper = new ObjectMapper();
 
         int fileIndex = 0;
-        while (fileIndex<categoryCount) {
+        while (fileIndex < categoryCount) {
             ClientRequestsJson json = new ClientRequestsJson();
             ClientRequestJson clientRequestJsonElements;
             final var random = new Random();
@@ -315,7 +318,7 @@ public class ParallelCommitteesMain {
                 /*
                  * Initialize category
                  */
-                final var catId = "Cat" + committeeIndex;
+                final var catId = getCatName(committeeIndex);
                 var category = network.getCategories()
                     .get(catId);
 
@@ -382,7 +385,7 @@ public class ParallelCommitteesMain {
         int endBeginDistance = end - begin;
 
         for (int committeeIndex = 0; committeeIndex < networkConfigs.size(); committeeIndex++) {
-            final var catName = "Cat" + committeeIndex;
+            final var catName = getCatName(committeeIndex);
             network.addCategory(catName, begin, end);
             beginTemp = begin;
             begin = end + 1;
@@ -391,9 +394,13 @@ public class ParallelCommitteesMain {
             com[committeeIndex] = new Committee(committeeIndex, categoryConfigJson.getCapacity(), categoryConfigJson.getPql(), categoryConfigJson.getCapacity());
             network.addCommittee(com[committeeIndex], catName);
             network.settingPeersForEachCategory(categoryConfigJson.getNumberOfQuota(), categoryConfigJson.getNumberOfInitialTokens(), catName);
-            network.setConsAlgoForEachCategory("pbft", catName);
+            network.setConsAlgoForEachCategory("Paxos", catName);
         }
         return com;
+    }
+
+    private static String getCatName(int committeeIndex) {
+        return "Cat" + committeeIndex;
     }
 
     private static CategoriesConfigJson readNetworkConfigFromJsonFile(String configFile)

@@ -8,10 +8,11 @@
     <groupId>come.engie.csai.pc</groupId>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>consensus</module>
+        <module>pbft</module>
         <module>core</module>
         <module>app</module>
         <module>usecase</module>
+        <module>paxos</module>
     </modules>
     <packaging>pom</packaging>
     <properties>

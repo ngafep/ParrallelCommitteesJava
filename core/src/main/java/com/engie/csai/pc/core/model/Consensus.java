@@ -10,7 +10,7 @@ package com.engie.csai.pc.core.model;
 public class Consensus
 {
 
-    protected static String consAlgo; // ## attribute ConsAlg
+    private String consAlgo; // ## attribute ConsAlg
 
     protected Committee CommitteeOfConsensus; // ## link CommitteeOfConsensus
 
@@ -21,11 +21,11 @@ public class Consensus
     // ## auto_generated
     public Consensus(String consAlgo)
     {
-        Consensus.consAlgo = consAlgo;
+        this.consAlgo = consAlgo;
     }
 
     // ## auto_generated
-    public static String getConsAlg()
+    public String getConsAlg()
     {
         return consAlgo;
     }
