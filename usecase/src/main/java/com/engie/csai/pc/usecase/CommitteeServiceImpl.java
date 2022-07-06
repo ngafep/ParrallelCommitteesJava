@@ -1,10 +1,9 @@
 package com.engie.csai.pc.usecase;
 
 
-import com.engie.csai.pc.consensus.PBFTsimulator;
 import com.engie.csai.pc.core.consensus.ConsensusSimulator;
 import com.engie.csai.pc.core.consensus.subscriber.MessageSubscriber;
-import com.engie.csai.pc.core.model.Committee;
+import com.engie.csai.pc.core.models.Committee;
 import com.engie.csai.pc.core.service.CommitteeService;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +46,7 @@ public class CommitteeServiceImpl implements MessageSubscriber, CommitteeService
             e.printStackTrace();
         }
         long end = System.currentTimeMillis();
-        System.out.println("Duration for " + category + " = " + (end-start) + " milliseconds");
+//        System.out.println("Duration for " + category + " = " + (end-start) + " milliseconds");
     }
 
 
@@ -56,6 +55,6 @@ public class CommitteeServiceImpl implements MessageSubscriber, CommitteeService
     {
         var allMessagesCount = committeePerCategory.values().stream().mapToInt(Committee::getNumberOfMessages).sum();
         var timeSpent = committeePerCategory.values().stream().findAny().get().getTimeSpent();
-        System.out.println("Global Mean Time is " + ((float)timeSpent / (float)allMessagesCount) + "ms");
+//        System.out.println("Global Mean Time is " + ((float)timeSpent / (float)allMessagesCount) + "ms");
     }
 }

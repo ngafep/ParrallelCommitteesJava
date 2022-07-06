@@ -115,7 +115,7 @@ public class Client {
 					+ "The request message index: " + pbfTsimulator.getRequestIndex() + " has received f+1 identical reply and its state became stable." +
 					"Total time: " + (repMsg.rcvtime - t) + " millisecond." +
 					"The occupied bandwidth: " + pbfTsimulator.getInFlyMsgLen() + " Bytes.";
-			System.out.println(msgNotified);
+//			System.out.println(msgNotified);
 			pbfTsimulator.notify(msgNotified);
 			// After this message, the effects pf the consensus for each request must be
 			// applied and considered in a random-selected node (peer) in related committee

@@ -1,20 +1,33 @@
 package com.engie.csai.pc.core.model;
 
+import com.engie.csai.pc.core.exception.ParallelCommitteeException;
+import java.util.UUID;
+
 public class PoW
 {
+
+    public static final int TARGET = 1;
+    public static final String PUBLIC_KEY = "publicKey";
 
     private PoW()
     {
 
     }
 
-    public static String powAnswer(String catId, String publicK, int target)
+    public static void checkAnswer(String root, UUID uid){ // uid should be public key
+        String powAnswer = powAnswer(root, uid.toString(), TARGET);
+        if(!powCheck(root, uid.toString(), TARGET, powAnswer)){
+            throw new ParallelCommitteeException("PoW has not been performed successfully for : " + root);
+        }
+    }
+
+    public static String powAnswer(String root, String publicK, int target)
     {
 
         int counter = 0;
         String ckn = null; // Concatenating cat (C), nonce (N), public key (K).
         String nonce = null; // PoW answer.
-        String ck = catId + publicK; // "category plus public key"
+        String ck = root + publicK; // "category plus public key"
         String powAnswer = null;
 
         for (; ; )

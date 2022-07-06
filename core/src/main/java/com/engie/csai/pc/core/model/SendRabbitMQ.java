@@ -25,9 +25,9 @@ public class SendRabbitMQ
         {
             channel.queueDeclare(queueName, false, false, false, null);
             channel.basicPublish("", queueName, null, message.getBytes(StandardCharsets.UTF_8));
-            System.out.println(
-                    " Client request: " + message + "\n has been sent via queue " + queueName + "\n" + "\n");
-            System.out.println("           ");
+//            System.out.println(
+//                    " Client request: " + message + "\n has been sent via queue " + queueName + "\n" + "\n");
+//            System.out.println("           ");
         }
     }
 }

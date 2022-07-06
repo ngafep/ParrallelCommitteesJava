@@ -7,7 +7,7 @@ import lombok.Setter;
 @Builder
 @Getter
 @Setter
-public class ReplicatedRequest {
+public class Replication {
     private boolean state;
     private String data;
 }

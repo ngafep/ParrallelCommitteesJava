@@ -9,7 +9,7 @@
       "capacity": 100,
       "pql": 100,
       "maxDataSize": 10,
-      "numberOfClients": 3
+      "numberOfClients": 6
     }
   ]
 }

@@ -3,6 +3,7 @@ package com.engie.csai.pc.core.model;
 import com.engie.csai.pc.core.consensus.ConsensusSimulator;
 import com.engie.csai.pc.core.model.json.ClientRequestJson;
 import com.engie.csai.pc.core.model.json.ClientRequestsJson;
+import com.engie.csai.pc.core.models.Committee;
 import com.engie.csai.pc.core.service.CommitteeService;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -33,7 +34,6 @@ public class RecvRabbitMQ {
         ConsensusSimulator consensus
     )
         throws IOException, TimeoutException {
-        service.register(category, committee ,consensus);
         boolean autoAck = false;
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
@@ -50,17 +50,25 @@ public class RecvRabbitMQ {
                 byte[] body
             )
                 throws IOException {
-                String routingKey = envelope.getRoutingKey();
-                String contentType = properties.getContentType();
-                long deliveryTag = envelope.getDeliveryTag();
                 ClientRequestMessage[] clientRequestMessages = new ClientRequestMessage[0];
                 try {
-                    clientRequestMessages = launchOperationForOneCategory(new String(body, StandardCharsets.UTF_8), committee.getPeerOfCommittee()
+                    clientRequestMessages = launchOperationForOneCategory(new String(body,
+                        StandardCharsets.UTF_8), committee.getProcessorNodes()
                         .size());
                 } catch (TimeoutException e) {
                     e.printStackTrace();
                 }
-                service.callConsensus(category, numberOfClientsPerCategory.get(category), numberOfPeersPerCategory.get(category), numberOfRequestsPerCategory.get(category), clientRequestMessages[0].toString());
+                if(clientRequestMessages != null && clientRequestMessages.length>0) {
+                    service.callConsensus(
+                        category,
+                        numberOfClientsPerCategory.get(
+                            category),
+                        numberOfPeersPerCategory.get(
+                            category),
+                        numberOfRequestsPerCategory.get(
+                            category),
+                        clientRequestMessages[0].toString());
+                }
             }
         });
     }
@@ -72,7 +80,7 @@ public class RecvRabbitMQ {
         throws IOException, TimeoutException {
         ClientRequestsJson jsonFile = new JsonReaderInParallel().parseJsonFile(catId);
         if (jsonFile == null) {
-            System.out.println("not file found for : " + catId);
+//            System.out.println("not file found for : " + catId);
             return new ClientRequestMessage[0];
         }
 
@@ -150,6 +158,14 @@ public class RecvRabbitMQ {
         int numberOfRequets
     ) {
         numberOfRequestsPerCategory.put(catId, numberOfRequets);
+    }
+
+    public static void register(
+        String category,
+        Committee committee,
+        CommitteeService service,
+        ConsensusSimulator consensus){
+        service.register(category, committee ,consensus);
     }
 
     // private final static String QUEUE_NAME = "hello";

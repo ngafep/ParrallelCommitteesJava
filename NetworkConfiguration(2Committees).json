@@ -2,20 +2,24 @@
   "networkConfig": 
   [
     {
-	"name": "category 1",
+      "name": "category 1",
       "numberOfQuota": 3,
       "numberOfInitialTokens": 100,
       "numberOfRequests": 1,
       "capacity": 100,
-      "pql": 100
+      "pql": 100,
+      "maxDataSize": 10,
+      "numberOfClients": 3
     },
     {
-	"name": "category 2",
+      "name": "category 2",
       "numberOfQuota": 3,
       "numberOfInitialTokens": 100,
       "numberOfRequests": 1,
       "capacity": 100,
-      "pql": 100
+      "pql": 100,
+      "maxDataSize": 20,
+      "numberOfClients": 3
     }
   ]
 }

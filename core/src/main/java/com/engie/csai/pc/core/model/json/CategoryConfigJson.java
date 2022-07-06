@@ -42,6 +42,12 @@ public class CategoryConfigJson
   @JsonProperty("pql")
   private Integer pql = null;
 
+  @JsonProperty("maxDataSize")
+  private Integer maxDataSize = null;
+
+  @JsonProperty("numberOfClients")
+  private Integer numberOfClients = null;
+
   public CategoryConfigJson name(String name) {
     this.name = name;
     return this;
@@ -78,6 +84,16 @@ public class CategoryConfigJson
 
   public void setNumberOfQuota(Integer numberOfQuota) {
     this.numberOfQuota = numberOfQuota;
+  }
+
+  @JsonProperty("numberOfClients")
+  @ApiModelProperty(value = "")
+  public Integer getNumberOfClients() {
+    return numberOfClients;
+  }
+
+  public void setNumberOfClients(Integer numberOfClients) {
+    this.numberOfClients = numberOfClients;
   }
 
   public CategoryConfigJson numberOfInitialTokens(Integer numberOfInitialTokens) {
@@ -135,6 +151,16 @@ public class CategoryConfigJson
 
   public void setcapacity(Integer capacity) {
     this.capacity = capacity;
+  }
+
+  @JsonProperty("maxDataSize")
+  @ApiModelProperty(value = "")
+  public Integer getMaxDataSize() {
+    return maxDataSize;
+  }
+
+  public void setMaxDataSize(Integer maxDataSize) {
+    this.maxDataSize = maxDataSize;
   }
 
   public CategoryConfigJson data(Integer pql) {

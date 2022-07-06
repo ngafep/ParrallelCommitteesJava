@@ -6,7 +6,9 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class ProcessorQueue {
-    private List<ProcessorNode> processorNodes;
-    private int capacity;
+
+public class Client {
+
+    private String id;
+    private List<PendingRequest> requests;
 }

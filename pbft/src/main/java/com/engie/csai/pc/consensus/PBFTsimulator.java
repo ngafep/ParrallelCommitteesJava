@@ -3,10 +3,17 @@ package com.engie.csai.pc.consensus;
 import com.engie.csai.pc.consensus.message.Message;
 import com.engie.csai.pc.consensus.replica.ByztReplica;
 import com.engie.csai.pc.consensus.replica.Replica;
-
 import com.engie.csai.pc.core.consensus.ConsensusSimulator;
 import com.engie.csai.pc.core.consensus.subscriber.MessageSubscriber;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Random;
+import java.util.Set;
+import java.util.stream.IntStream;
+import me.tongfei.progressbar.ProgressBar;
 
 public class PBFTsimulator implements ConsensusSimulator {
 
@@ -191,11 +198,28 @@ public class PBFTsimulator implements ConsensusSimulator {
 
 		//初始随机发送INFLIGHT个请求消息 // Initially randomly send INFLIGHT request messages
 		Random rand = new Random(555);
-		int requestNums = 0;
+		int requestNums = Math.min(INFLIGHT, requestCount);
+//		List<Integer> listInt = new ArrayList<>();
 		for(int i = 0; i < Math.min(INFLIGHT, requestCount); i++) {
 			clients[rand.nextInt(clientCount)].sendRequest(0);
-			requestNums++;
 		}
+//		for (Integer x : ProgressBar.wrap(
+//			listInt, "TaskName")) {
+//			clients[rand.nextInt(clientCount)].sendRequest(0);
+//			requestNums++;
+//		}
+//
+//		ProgressBar.wrap(
+//			IntStream.range(0, Math.min(INFLIGHT, requestCount)).sequential(), "Handling messages").forEach(i -> {
+//			clients[rand.nextInt(clientCount)].sendRequest(0);
+//			try {
+//				Thread.sleep(1000);
+//			} catch (
+//				InterruptedException e) {
+//				throw new RuntimeException(
+//					e);
+//			}
+//		});
 
 		long timestamp = 0;
 		//消息处理 // Message processing
@@ -256,9 +280,9 @@ public class PBFTsimulator implements ConsensusSimulator {
 			totalTime += clients[i].accTime;
 			totalStableMsg += clients[i].stableMsgNum();
 		}
-		double tps = getStableRequestNum(clients)/(double)(timestamp/1000);
-		System.out.println("[The end]The average message confirmation time: "+totalTime/totalStableMsg
-				+" millisecond. The message throughput: "+tps+"tps");
+//		double tps = getStableRequestNum(clients)/(double)(timestamp/1000);
+//		System.out.println("[The end]The average message confirmation time: "+totalTime/totalStableMsg
+//				+" millisecond. The message throughput: "+tps+"tps");
 	}
 
 	/**

@@ -1,7 +1,7 @@
 package com.engie.csai.pc.core.service;
 
 import com.engie.csai.pc.core.consensus.ConsensusSimulator;
-import com.engie.csai.pc.core.model.Committee;
+import com.engie.csai.pc.core.models.Committee;
 
 public interface CommitteeService {
 
