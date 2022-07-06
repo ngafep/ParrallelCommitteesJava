@@ -26,7 +26,7 @@ public class CommitteeListener implements
         this.numberOfMessages+=numberOfMessages;
         if(finished == committees.size()){
             final var average = (double)totalTime / (double)this.numberOfMessages;
-            System.out.println("Global Mean Time per request = " + average + " ms");
+            System.out.println("Mean time to process each request by the system = " + average + " ms");
         }
 
     }
