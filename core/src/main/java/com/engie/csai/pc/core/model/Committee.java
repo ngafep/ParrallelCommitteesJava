@@ -14,6 +14,7 @@ package com.engie.csai.pc.core.model;
 
 import com.engie.csai.pc.core.consensus.ConsensusSimulator;
 import com.engie.csai.pc.core.consensus.subscriber.MessageSubscriber;
+import com.engie.csai.pc.core.listener.EndMetrics;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -167,6 +168,11 @@ public class Committee implements MessageSubscriber
     public void onMsgReceived(String msg){
         checkMsg(msg);
         executeProtocol();
+    }
+
+    @Override
+    public void onMsgReceived(EndMetrics metrics) {
+
     }
 
     public int getTimeSpent()

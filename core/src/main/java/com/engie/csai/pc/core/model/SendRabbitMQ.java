@@ -20,7 +20,7 @@ public class SendRabbitMQ
             throws IOException, TimeoutException
     {
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("rabbitmq");
+        factory.setHost("localhost");
         try (Connection connection = factory.newConnection(); Channel channel = connection.createChannel())
         {
             channel.queueDeclare(queueName, false, false, false, null);

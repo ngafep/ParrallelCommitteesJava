@@ -5,19 +5,19 @@
       "name": "category 1",
       "numberOfQuota": 3,
       "numberOfInitialTokens": 100,
-      "numberOfRequests": 1,
+      "numberOfRequests": 100,
       "capacity": 100,
-      "pql": 100,
-      "maxDataSize": 10,
+      "pql": 1000,
+      "maxDataSize": 100,
       "numberOfClients": 3
     },
     {
       "name": "category 2",
       "numberOfQuota": 3,
       "numberOfInitialTokens": 100,
-      "numberOfRequests": 1,
+      "numberOfRequests": 100,
       "capacity": 100,
-      "pql": 100,
+      "pql": 1000,
       "maxDataSize": 20,
       "numberOfClients": 3
     }

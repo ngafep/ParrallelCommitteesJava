@@ -5,19 +5,17 @@ import com.engie.csai.pc.consensus.replica.ByztReplica;
 import com.engie.csai.pc.consensus.replica.Replica;
 import com.engie.csai.pc.core.consensus.ConsensusSimulator;
 import com.engie.csai.pc.core.consensus.subscriber.MessageSubscriber;
-import java.util.ArrayList;
+import com.engie.csai.pc.core.listener.EndMetrics;
 import java.util.HashSet;
-import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.IntStream;
-import me.tongfei.progressbar.ProgressBar;
 
 public class PBFTsimulator implements ConsensusSimulator {
 
 	private final Set<MessageSubscriber> messageSubscribers = new HashSet<>();
+	private MessageSubscriber endSuscriber;
 	/**
 	 * About the network configuration in this simulator:
 	 *
@@ -81,7 +79,7 @@ public class PBFTsimulator implements ConsensusSimulator {
 	 * Maybe it is better not to be a constant ...
 	 */
 
-	public static final int TIMEOUT = 500;					//节点超时设定(毫秒) //Node timeout setting (milliseconds)
+	public static final int TIMEOUT = 5000;					//节点超时设定(毫秒) //Node timeout setting (milliseconds)
     /**
      * The primary is detected to be faulty by using timeout.
      * When the timeout expires, another replica (peer/node) will be chosen as
@@ -159,12 +157,12 @@ public class PBFTsimulator implements ConsensusSimulator {
 			@Override
 			public void run()
 			{
-				new PBFTsimulator().launch(3, 5, 5000);
+				new PBFTsimulator().launch(3, 5, 5000, "committee_0");
 			}
 		};
 	}
 
-	public void launch(int clientCount, int peerCount, int requestCount) {
+	public void launch(int clientCount, int peerCount, int requestCount, String caller) {
 		this.peerCount = peerCount;
 		this.requestCount = requestCount;
 		netDlys = netDlyBtwRpInit(peerCount);
@@ -256,7 +254,7 @@ public class PBFTsimulator implements ConsensusSimulator {
 				requestNums++;
 			}
 			inFlyMsgLen -= msg.len;
-			timestamp = msg.rcvtime;
+			timestamp += msg.rcvtime;
 //			if(getNetDelay(inFlyMsgLen, 0) > COLLAPSEDELAY ) {
 //				/*System.out.println("[Error]网络消息总负载"+inFlyMsgLen
 //						+"B,网络传播时延超过"+COLLAPSEDELAY/1000
@@ -280,9 +278,12 @@ public class PBFTsimulator implements ConsensusSimulator {
 			totalTime += clients[i].accTime;
 			totalStableMsg += clients[i].stableMsgNum();
 		}
-//		double tps = getStableRequestNum(clients)/(double)(timestamp/1000);
-//		System.out.println("[The end]The average message confirmation time: "+totalTime/totalStableMsg
-//				+" millisecond. The message throughput: "+tps+"tps");
+		double tps = getStableRequestNum(clients)/(double)(timestamp/1000.0);
+		final var endMessage = "[The end]The average message confirmation time: " + totalTime / totalStableMsg
+				+ " millisecond. The message throughput: " + tps + "tps";
+//		System.out.println(endMessage);
+
+		notify(EndMetrics.builder().throughput(tps).totalStableMessage(totalStableMsg).totalTime(totalTime).timestamp(timestamp).categoryId(caller).build());
 	}
 
 	/**
@@ -389,6 +390,15 @@ public class PBFTsimulator implements ConsensusSimulator {
 	public void subscribe(MessageSubscriber committee)
 	{
 		messageSubscribers.add(committee);
+	}
+
+	public void subscribeEndPbft(MessageSubscriber endSuscriber)
+	{
+		this.endSuscriber = endSuscriber;
+	}
+	public void notify(EndMetrics endMetrics)
+	{
+		endSuscriber.onMsgReceived(endMetrics);
 	}
 
 	public void notify(String msg){

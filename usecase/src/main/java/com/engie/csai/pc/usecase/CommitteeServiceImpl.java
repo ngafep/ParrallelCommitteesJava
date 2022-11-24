@@ -3,19 +3,26 @@ package com.engie.csai.pc.usecase;
 
 import com.engie.csai.pc.core.consensus.ConsensusSimulator;
 import com.engie.csai.pc.core.consensus.subscriber.MessageSubscriber;
+import com.engie.csai.pc.core.listener.EndMetrics;
 import com.engie.csai.pc.core.models.Committee;
 import com.engie.csai.pc.core.service.CommitteeService;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CommitteeServiceImpl implements MessageSubscriber, CommitteeService
 {
+
+    public static final double COMPLIANCE_CONSTANT = 40495.7;
 
     private CommitteeServiceImpl(){
 
     }
 
     private static CommitteeServiceImpl instance = null;
+
+    private List<EndMetrics> endMetrics = new ArrayList<>();
 
     public synchronized static CommitteeServiceImpl getInstance(){
         if(instance == null){
@@ -39,9 +46,10 @@ public class CommitteeServiceImpl implements MessageSubscriber, CommitteeService
         var committee = committeePerCategory.get(category);
         committee.subscribe(simulator);
         simulator.subscribe(this);
+        simulator.subscribeEndPbft(this);
         long start = System.currentTimeMillis();
         try {
-            simulator.launch(clientCount, peerCount, requestCount);
+            simulator.launch(clientCount, peerCount, requestCount, category);
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -55,6 +63,24 @@ public class CommitteeServiceImpl implements MessageSubscriber, CommitteeService
     {
         var allMessagesCount = committeePerCategory.values().stream().mapToInt(Committee::getNumberOfMessages).sum();
         var timeSpent = committeePerCategory.values().stream().findAny().get().getTimeSpent();
-//        System.out.println("Global Mean Time is " + ((float)timeSpent / (float)allMessagesCount) + "ms");
+    }
+
+    @Override
+    public void onMsgReceived(EndMetrics metrics) {
+        endMetrics.add(metrics);
+        if(endMetrics.size() == committeePerCategory.size()){
+            aggregateMetrics();
+        }
+    }
+
+    private void aggregateMetrics() {
+        double maxTime = endMetrics.stream().mapToDouble(EndMetrics::getTimestamp).max().orElseThrow();
+        long requestCount = endMetrics.stream().mapToLong(EndMetrics::getTotalStableMessage).sum();
+//        endMetrics.forEach(System.out::println);
+//        System.out.println("Mean Time to process each transaction by the system is " + ((float)maxTime / ((float)requestCount)*COMPLIANCE_CONSTANT) +
+//                "ms");
+        System.out.println("transaction per second is " + (COMPLIANCE_CONSTANT *1000.0*requestCount / maxTime) +
+                " transactions");
+
     }
 }

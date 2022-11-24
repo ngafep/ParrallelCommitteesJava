@@ -2,6 +2,7 @@ package com.engie.csai.pc.core.models;
 
 import com.engie.csai.pc.core.consensus.ConsensusSimulator;
 import com.engie.csai.pc.core.consensus.subscriber.MessageSubscriber;
+import com.engie.csai.pc.core.listener.EndMetrics;
 import com.engie.csai.pc.core.listener.ICommitteeListener;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -99,18 +100,23 @@ public class Committee
         executeProtocol(displayTree);
         if(!displayTree) {
             progressBar.step();
-            final var totalTime = System.currentTimeMillis() - start;
-            final var meanTimePerRequest = 1.0 * totalTime / (numberOfMessages * 1.0);
-            String meanTime = getMeanValueAsFormattedString(
-                meanTimePerRequest);
+//            final var totalTime = System.currentTimeMillis() - start;
+//            final var meanTimePerRequest = 1.0 * totalTime / (numberOfMessages * 1.0);
+//            String meanTime = getMeanValueAsFormattedString(
+//                meanTimePerRequest);
 
-            progressBar.setExtraMessage("Time= " + getTotalTimeAsFormattedString(totalTime) +"ms. Mean time/request= " + meanTime +" ms/tx");
+//            progressBar.setExtraMessage("Time= " + getTotalTimeAsFormattedString(totalTime) +"ms. Mean time/request= " + meanTime +" ms/tx");
             if(numberOfMessages == progressBar.getMax()){
                 progressBar.close();
-                listeners.forEach(l -> l.notifyFinished(numberOfMessages, totalTime));
+//                listeners.forEach(l -> l.notifyFinished(numberOfMessages, totalTime));
 
             }
         }
+    }
+
+    @Override
+    public void onMsgReceived(EndMetrics metrics) {
+
     }
 
     private static String getTotalTimeAsFormattedString(

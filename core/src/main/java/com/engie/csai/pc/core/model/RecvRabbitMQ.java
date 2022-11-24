@@ -36,7 +36,7 @@ public class RecvRabbitMQ {
         throws IOException, TimeoutException {
         boolean autoAck = false;
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("rabbitmq");
+        factory.setHost("localhost");
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
         channel.queueDeclare(queueName, false, false, false, null);

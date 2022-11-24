@@ -43,6 +43,7 @@ public class ParallelCommitteesNewMain {
         var committees = networkConfigs.stream()
             .map(networkConfig -> Committee.builder()
                 .capacity(networkConfig.getCapacity())
+                .numberOfMessages(networkConfig.getNumberOfRequests())
                 .consensus(Committee.Consensus.PBFT)
                 .dataSizeMax(networkConfig.getMaxDataSize())
                 .numberOfClients(networkConfig.getNumberOfClients())
@@ -78,10 +79,12 @@ public class ParallelCommitteesNewMain {
         LOGGER.info(() -> "Number of committees: " + network.getCommittees()
             .size());
         createProcessorNodes(network);
-        run(network,generateClientJsonFiles(network));
+        generateClientJsonFiles(network);
+        run(network);
     }
 
-    private static void run(Network network, int maxRequests) {
+    private static void run(Network network) {
+        int maxRequests = network.getCommittees().stream().mapToInt(Committee::getNumberOfMessages).max().orElseThrow();
         String modeMessage = """
             Please select the mode by entering 1 or 2 :
             1- Slow motion mode (Tree only will be displayed)
@@ -123,10 +126,10 @@ public class ParallelCommitteesNewMain {
             });
     }
 
-    private static int generateClientJsonFiles(Network network) {
-        LOGGER.info("Enter number of Client-Request in each JSON file (for each category): ");
-        Scanner sc = new Scanner(System.in);
-        int numberOfRequestsInJSON = sc.nextInt();
+    private static void generateClientJsonFiles(Network network) {
+//        LOGGER.info("Enter number of Client-Request in each JSON file (for each category): ");
+//        Scanner sc = new Scanner(System.in);
+//        int numberOfRequestsInJSON = sc.nextInt();
 
         network.getCommittees()
             .forEach(committee -> {
@@ -135,7 +138,7 @@ public class ParallelCommitteesNewMain {
                 final var random = new Random();
                 var maxClientId = 100+committee.getNumberOfClients();
 
-                for (int requestIndex = 0; requestIndex < numberOfRequestsInJSON; requestIndex++) {
+                for (int requestIndex = 0; requestIndex < committee.getNumberOfMessages(); requestIndex++) {
                     String data = getData(committee.getDataSizeMax());
 
                     clientRequestJsonElements = new ClientRequestJson().data(data)
@@ -152,7 +155,6 @@ public class ParallelCommitteesNewMain {
                     throw new ParallelCommitteeException(e);
                 }
             });
-        return numberOfRequestsInJSON;
     }
 
     private static String getData(int dataSizeMax) {
@@ -175,29 +177,32 @@ public class ParallelCommitteesNewMain {
             LOGGER.info(peersInCommittee);
             Scanner sc = new Scanner(System.in);
             int processorNodesSize = sc.nextInt();
-            for (int processorNodeIndex = 0; processorNodeIndex < processorNodesSize; processorNodeIndex++) {
-                UUID uid = UUID.randomUUID();
-                PoW.checkAnswer(category, uid);
-                var processorNode = ProcessorNode.builder()
-                    .id(uid)
-                    .currentQuota(committee.getInitialQuota())
-                    .replications(new ArrayList<>())
-                    .committee(committee)
-                    .build();
-                if (committee.getCapacity() <= committee.getProcessorNodes()
-                    .size()) {
-                    committee.getProcessorQueue()
-                        .getProcessorNodes()
-                        .add(processorNode);
-                }
-                else {
-                    committee.getProcessorNodes()
-                        .add(processorNode);
-                }
-            }
+            populateProcessorNodes(committee, category, processorNodesSize);
         }
     }
 
+    private static void populateProcessorNodes(Committee committee, String category, int processorNodesSize) {
+        for (int processorNodeIndex = 0; processorNodeIndex < processorNodesSize; processorNodeIndex++) {
+            UUID uid = UUID.randomUUID();
+            PoW.checkAnswer(category, uid);
+            var processorNode = ProcessorNode.builder()
+                .id(uid)
+                .currentQuota(committee.getInitialQuota())
+                .replications(new ArrayList<>())
+                .committee(committee)
+                .build();
+            if (committee.getCapacity() <= committee.getProcessorNodes()
+                .size()) {
+                committee.getProcessorQueue()
+                    .getProcessorNodes()
+                    .add(processorNode);
+            }
+            else {
+                committee.getProcessorNodes()
+                    .add(processorNode);
+            }
+        }
+    }
 
 
     private static CategoriesConfigJson getCategoriesConfigJson()

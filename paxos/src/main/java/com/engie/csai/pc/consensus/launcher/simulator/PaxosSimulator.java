@@ -10,10 +10,16 @@ public class PaxosSimulator implements ConsensusSimulator {
     }
 
     @Override
+    public void subscribeEndPbft(MessageSubscriber committee) {
+        System.out.println("Paxos subscribed!!");
+    }
+
+    @Override
     public void launch(
         int clientCount,
         int peerCount,
-        int requestCount
+        int requestCount,
+        String caller
     ) {
         System.out.println("Paxos Launched!!");
     }
