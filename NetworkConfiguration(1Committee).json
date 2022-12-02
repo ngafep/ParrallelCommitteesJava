@@ -5,11 +5,12 @@
 	"name": "category 1",
       "numberOfQuota": 3,
       "numberOfInitialTokens": 100,
-      "numberOfRequests": 100,
+      "numberOfRequests": 1000,
       "capacity": 100,
       "pql": 5000,
       "maxDataSize": 100,
-      "numberOfClients": 3
+      "numberOfClients": 3,
+      "numberOfReplicas": 5
     }
   ]
 }

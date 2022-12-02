@@ -14,7 +14,7 @@ public record PBFTLauncher(String catId, Committee committee, CommitteeService c
     @Override
     public void run() {
         try {
-            RecvRabbitMQ.standbyForReceiveMessages(catId, "Queue" + catId, committee, committeeService, new PBFTsimulator());
+            RecvRabbitMQ.standbyForReceiveMessages(catId, "Queue" + catId, committee, committeeService);
             SendRabbitMQ.send(catId, "Queue" + catId);
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();

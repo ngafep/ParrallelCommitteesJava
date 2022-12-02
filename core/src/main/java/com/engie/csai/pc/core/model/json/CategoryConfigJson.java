@@ -48,6 +48,9 @@ public class CategoryConfigJson
   @JsonProperty("numberOfClients")
   private Integer numberOfClients = null;
 
+  @JsonProperty("numberOfReplicas")
+  private Integer numberOfReplicas = null;
+
   public CategoryConfigJson name(String name) {
     this.name = name;
     return this;
@@ -94,6 +97,16 @@ public class CategoryConfigJson
 
   public void setNumberOfClients(Integer numberOfClients) {
     this.numberOfClients = numberOfClients;
+  }
+
+  @JsonProperty("numberOfReplicas")
+  @ApiModelProperty(value = "")
+  public Integer getNumberOfReplicas() {
+    return numberOfReplicas;
+  }
+
+  public void setNumberOfReplicas(Integer numberOfReplicas) {
+    this.numberOfReplicas = numberOfReplicas;
   }
 
   public CategoryConfigJson numberOfInitialTokens(Integer numberOfInitialTokens) {

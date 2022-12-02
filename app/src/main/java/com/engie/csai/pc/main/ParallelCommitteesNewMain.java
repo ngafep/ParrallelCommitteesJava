@@ -41,7 +41,7 @@ public class ParallelCommitteesNewMain {
             .build();
         //TODO Put datasizemax in json file
         var committees = networkConfigs.stream()
-            .map(networkConfig -> Committee.builder()
+            .map(networkConfig -> {var committee = Committee.builder()
                 .capacity(networkConfig.getCapacity())
                 .numberOfMessages(networkConfig.getNumberOfRequests())
                 .consensus(Committee.Consensus.PBFT)
@@ -56,8 +56,11 @@ public class ParallelCommitteesNewMain {
                 .processorQueue(ProcessorQueue.builder()
                     .capacity(networkConfig.getPql())
                     .processorNodes(new ArrayList<>())
-                    .build())
-                .build())
+                    .build()
+                )
+                .build();
+                populateProcessorNodes(committee, networkConfig.getNumberOfReplicas());
+            return committee;})
             .toList();
         network.setCommittees(committees);
         return Network.builder()
@@ -78,7 +81,6 @@ public class ParallelCommitteesNewMain {
         var network = configureCommittees(config);
         LOGGER.info(() -> "Number of committees: " + network.getCommittees()
             .size());
-        createProcessorNodes(network);
         generateClientJsonFiles(network);
         run(network);
     }
@@ -127,10 +129,6 @@ public class ParallelCommitteesNewMain {
     }
 
     private static void generateClientJsonFiles(Network network) {
-//        LOGGER.info("Enter number of Client-Request in each JSON file (for each category): ");
-//        Scanner sc = new Scanner(System.in);
-//        int numberOfRequestsInJSON = sc.nextInt();
-
         network.getCommittees()
             .forEach(committee -> {
                 ClientRequestsJson json = new ClientRequestsJson();
@@ -158,30 +156,16 @@ public class ParallelCommitteesNewMain {
     }
 
     private static String getData(int dataSizeMax) {
-        StringBuilder dataCreator = new StringBuilder();
 
         /*
                     Data includes only a sequence of '0'.
                     Number of Zeros is based on maximum authorized size of data in each category.
                     */
-        dataCreator.append("0".repeat(Math.max(0, dataSizeMax)));
-        return dataCreator.toString();
+        return "0".repeat(Math.max(0, dataSizeMax));
     }
 
-    private static void createProcessorNodes(Network network) {
-        for (Committee committee : network.getCommittees()) {
-            final var category = committee.getCategory();
-            final var committeeCapacity = committee.getCapacity();
-            final var peersInCommittee = String.format(PEERS_IN_COMMITTEE_INPUT, category,
-                committeeCapacity);
-            LOGGER.info(peersInCommittee);
-            Scanner sc = new Scanner(System.in);
-            int processorNodesSize = sc.nextInt();
-            populateProcessorNodes(committee, category, processorNodesSize);
-        }
-    }
-
-    private static void populateProcessorNodes(Committee committee, String category, int processorNodesSize) {
+    private static void populateProcessorNodes(Committee committee, int processorNodesSize) {
+        String category = committee.getCategory();
         for (int processorNodeIndex = 0; processorNodeIndex < processorNodesSize; processorNodeIndex++) {
             UUID uid = UUID.randomUUID();
             PoW.checkAnswer(category, uid);
@@ -216,7 +200,6 @@ public class ParallelCommitteesNewMain {
         Scanner sc = new Scanner(System.in);
         LOGGER.info("Please provide a config file path");
         String configFile = sc.next();
-        final CategoriesConfigJson config = readNetworkConfigFromJsonFile(configFile);
-        return config;
+        return readNetworkConfigFromJsonFile(configFile);
     }
 }

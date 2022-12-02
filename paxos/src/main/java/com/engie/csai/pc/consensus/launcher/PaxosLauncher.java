@@ -1,6 +1,5 @@
 package com.engie.csai.pc.consensus.launcher;
 
-import com.engie.csai.pc.consensus.launcher.simulator.PaxosSimulator;
 import com.engie.csai.pc.core.consensus.launcher.ConsensusLauncher;
 import com.engie.csai.pc.core.model.RecvRabbitMQ;
 import com.engie.csai.pc.core.model.SendRabbitMQ;
@@ -13,7 +12,7 @@ public record PaxosLauncher(String catId, Committee committee, CommitteeService 
     @Override
     public void run() {
         try {
-            RecvRabbitMQ.standbyForReceiveMessages(catId, "Queue" + catId, committee, committeeService, new PaxosSimulator());
+            RecvRabbitMQ.standbyForReceiveMessages(catId, "Queue" + catId, committee, committeeService);
             SendRabbitMQ.send(catId, "Queue" + catId);
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();

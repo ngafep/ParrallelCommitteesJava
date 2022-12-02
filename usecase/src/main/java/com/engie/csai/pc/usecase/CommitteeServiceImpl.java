@@ -10,9 +10,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class CommitteeServiceImpl implements MessageSubscriber, CommitteeService
 {
+
+    private static final Logger LOGGER =
+            Logger.getLogger(CommitteeServiceImpl.class.getName());
 
     public static final double COMPLIANCE_CONSTANT = 40495.7;
 
@@ -47,22 +51,17 @@ public class CommitteeServiceImpl implements MessageSubscriber, CommitteeService
         committee.subscribe(simulator);
         simulator.subscribe(this);
         simulator.subscribeEndPbft(this);
-        long start = System.currentTimeMillis();
         try {
             simulator.launch(clientCount, peerCount, requestCount, category);
         }catch(Exception e){
             e.printStackTrace();
         }
-        long end = System.currentTimeMillis();
-//        System.out.println("Duration for " + category + " = " + (end-start) + " milliseconds");
     }
 
 
     @Override
     public void onMsgReceived(String msg)
     {
-        var allMessagesCount = committeePerCategory.values().stream().mapToInt(Committee::getNumberOfMessages).sum();
-        var timeSpent = committeePerCategory.values().stream().findAny().get().getTimeSpent();
     }
 
     @Override
@@ -76,11 +75,9 @@ public class CommitteeServiceImpl implements MessageSubscriber, CommitteeService
     private void aggregateMetrics() {
         double maxTime = endMetrics.stream().mapToDouble(EndMetrics::getTimestamp).max().orElseThrow();
         long requestCount = endMetrics.stream().mapToLong(EndMetrics::getTotalStableMessage).sum();
-//        endMetrics.forEach(System.out::println);
-//        System.out.println("Mean Time to process each transaction by the system is " + ((float)maxTime / ((float)requestCount)*COMPLIANCE_CONSTANT) +
-//                "ms");
-        System.out.println("transaction per second is " + (COMPLIANCE_CONSTANT *1000.0*requestCount / maxTime) +
-                " transactions");
+        final var msg = "transaction per second is " + (COMPLIANCE_CONSTANT * 1000.0 * requestCount / maxTime) +
+                " transactions";
+        LOGGER.info(()->msg);
 
     }
 }
