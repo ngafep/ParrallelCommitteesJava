@@ -27,7 +27,12 @@ public class SendRabbitMQ
             errorLoadRabbitMQConfig.getStackTrace();
         }
         factory = factory.load(rabbitMQConf);
-        try (Connection connection = factory.newConnection(); Channel channel = connection.createChannel())
+        factory.setHandshakeTimeout(900000);
+        factory.setConnectionTimeout(900000);
+        factory.setChannelRpcTimeout(900000);
+        factory.setWorkPoolTimeout(900000);
+        factory.setShutdownTimeout(900000);
+       try (Connection connection = factory.newConnection(); Channel channel = connection.createChannel())
         {
             channel.queueDeclare(queueName, false, false, false, null);
             channel.basicPublish("", queueName, null, message.getBytes(StandardCharsets.UTF_8));
