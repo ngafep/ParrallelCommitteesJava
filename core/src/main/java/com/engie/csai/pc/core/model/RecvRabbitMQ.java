@@ -32,62 +32,28 @@ public class RecvRabbitMQ {
     private static final Map<String, Integer> numberOfRequestsPerCategory = new ConcurrentHashMap<>();
 
     public static void standbyForReceiveMessages(
-            String category,
-            String queueName,
-            Committee committee,
-            CommitteeService service
-    )
-            throws IOException, TimeoutException {
-        boolean autoAck = false;
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
-
-        Properties rabbitMQConf = new Properties();
-        try {
-            rabbitMQConf.load(SendRabbitMQ.class.getClassLoader().getResourceAsStream("rabbitmq.conf"));
-        } catch (IOException errorLoadRabbitMQConfig) {
-            errorLoadRabbitMQConfig.getStackTrace();
-        }
-        factory = factory.load(rabbitMQConf);
-        factory.setHandshakeTimeout(900000);
-        factory.setConnectionTimeout(900000);
-        factory.setChannelRpcTimeout(900000);
-        factory.setWorkPoolTimeout(900000);
-        factory.setShutdownTimeout(900000);
-        try (Connection connection = factory.newConnection(); Channel channel = connection.createChannel()) {
-
-            channel.queueDeclare(queueName, false, false, false, null);
-
-            channel.basicConsume(queueName, autoAck, "myConsumerTag", new DefaultConsumer(channel) {
-                @Override
-                public void handleDelivery(
-                        String consumerTag,
-                        Envelope envelope,
-                        AMQP.BasicProperties properties,
-                        byte[] body
-                ) {
-                    ClientRequestMessage[] clientRequestMessages = launchOperationForOneCategory(new String(body,
-                            StandardCharsets.UTF_8), committee.getProcessorNodes()
-                            .size());
-                    if (clientRequestMessages.length > 0) {
-                        service.callConsensus(
-                                category,
-                                numberOfClientsPerCategory.get(
-                                        category),
-                                numberOfPeersPerCategory.get(
-                                        category),
-                                numberOfRequestsPerCategory.get(
-                                        category),
-                                clientRequestMessages[0].toString());
-                    }
-                }
-            });
+        String category,
+        Committee committee,
+        CommitteeService service
+    ) {
+        ClientRequestMessage[] clientRequestMessages = launchOperationForOneCategory(category, committee.getProcessorNodes()
+            .size());
+        if (clientRequestMessages.length > 0) {
+            service.callConsensus(
+                category,
+                numberOfClientsPerCategory.get(
+                    category),
+                numberOfPeersPerCategory.get(
+                    category),
+                numberOfRequestsPerCategory.get(
+                    category),
+                clientRequestMessages[0].toString());
         }
     }
 
     private static ClientRequestMessage[] launchOperationForOneCategory(
-            String catId,
-            int peerCount
+        String catId,
+        int peerCount
     ) {
         ClientRequestsJson jsonFile = new JsonReaderInParallel().parseJsonFile(catId);
         if (jsonFile == null) {
@@ -95,16 +61,16 @@ public class RecvRabbitMQ {
         }
 
         ClientRequestMessage[] clientRequestExtractedFromJson = new ClientRequestMessage[jsonFile.getRequests()
-                .size()]; // -> Client-Request[*category index*][*Client-Request index in that category*]
+            .size()]; // -> Client-Request[*category index*][*Client-Request index in that category*]
         int requestIndex = 0;
         List<ClientRequestJson> requestJsonList = jsonFile.getRequests();
         Set<String> clientsInJson = requestJsonList.stream()
-                .map(ClientRequestJson::getSenderSignature)
-                .collect(Collectors.toSet());
+            .map(ClientRequestJson::getSenderSignature)
+            .collect(Collectors.toSet());
         RecvRabbitMQ.addNumberOfClientsForCategory(catId, clientsInJson.size());
         RecvRabbitMQ.addNumberOfPeersForCategory(catId, peerCount);
         RecvRabbitMQ.addNumberOfRequestsForCategory(catId, jsonFile.getRequests()
-                .size());
+            .size());
         for (ClientRequestJson requestJson : requestJsonList) {
             assert false;
             clientRequestExtractedFromJson[requestIndex] = new ClientRequestMessage(requestJson.getSenderSignature(), requestJson.getReceiverAddress(), requestJson.getFee(), requestJson.getData(), requestJson.getTokenToSend(), false, new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date()));
@@ -114,32 +80,32 @@ public class RecvRabbitMQ {
     }
 
     public static void addNumberOfClientsForCategory(
-            String catId,
-            int nbClients
+        String catId,
+        int nbClients
     ) {
         numberOfClientsPerCategory.put(catId, nbClients);
     }
 
     public static void addNumberOfPeersForCategory(
-            String catId,
-            int numberOfPeers
+        String catId,
+        int numberOfPeers
     ) {
         numberOfPeersPerCategory.put(catId, numberOfPeers);
     }
 
     public static void addNumberOfRequestsForCategory(
-            String catId,
-            int numberOfRequets
+        String catId,
+        int numberOfRequets
     ) {
         numberOfRequestsPerCategory.put(catId, numberOfRequets);
     }
 
     public static void register(
-            String category,
-            Committee committee,
-            CommitteeService service,
-            ConsensusSimulator consensus) {
+        String category,
+        Committee committee,
+        CommitteeService service,
+        ConsensusSimulator consensus
+    ) {
         service.register(category, committee, consensus);
     }
-
 }

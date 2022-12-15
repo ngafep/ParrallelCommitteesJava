@@ -103,7 +103,7 @@ public class ParallelCommitteesNewMain {
         System.out.println("Total number of clients in the system : " + totalNumberOfClients);
         System.out.println("Total number of processed requests by the system : " + network.getCommittees().size()*maxRequests);
 
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(15);
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(network.getCommittees().size());
         final long start = System.currentTimeMillis();
         ICommitteeListener listener = new CommitteeListener();
 
